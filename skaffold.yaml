@@ -1,0 +1,36 @@
+apiVersion: skaffold/v4beta14
+kind: Config
+manifests:
+  rawYaml:
+    - ./infra/k8s/*
+# Default local build    
+build:
+  local:
+    push: false
+  artifacts:
+    - image: richdgo4/auth
+      context: auth
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "src/**/*.ts"
+            dest: "."    
+
+profiles:
+  - name: gcp
+    manifests:
+      rawYaml:
+        - ./infra/k8s-gcp/*
+    build:
+      googleCloudBuild:
+        projectId: project-809e066d-e5ea-4d42-aa1
+      artifacts:
+        - image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/auth
+          context: auth
+          docker:
+            dockerfile: Dockerfile
+          sync:
+            manual:
+              - src: "src/**/*.ts"
+                dest: "."
