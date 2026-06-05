@@ -17,3 +17,10 @@ spec:
             name: auth-service
             port:
               number: 3000
+      - path: /api/hedgehog/consult
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: hedgehog-consultancy-service
+            port:
+              number: 3001

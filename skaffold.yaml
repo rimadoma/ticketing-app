@@ -15,7 +15,15 @@ build:
       sync:
         manual:
           - src: "src/**/*.ts"
-            dest: "."    
+            dest: "."
+    - image: richdgo4/hedgehog-consultancy
+      context: hedgehog-consultancy
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "src/**/*.ts"
+            dest: "."
 
 profiles:
   - name: gcp
@@ -23,11 +31,19 @@ profiles:
       rawYaml:
         - ./infra/k8s-gcp/*
     build:
-      googleCloudBuild:
-        projectId: project-809e066d-e5ea-4d42-aa1
+      local:
+        push: true
       artifacts:
         - image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/auth
           context: auth
+          docker:
+            dockerfile: Dockerfile
+          sync:
+            manual:
+              - src: "src/**/*.ts"
+                dest: "."
+        - image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/hedgehog-consultancy
+          context: hedgehog-consultancy
           docker:
             dockerfile: Dockerfile
           sync:

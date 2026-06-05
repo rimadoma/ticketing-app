@@ -59,7 +59,7 @@ This builds all service images, deploys them to your local cluster, and watches 
    ```
 
 **Cluster setup:**
-1. Ensure your Google Cloud project has a Kubernetes cluster and Cloud Build enabled
+1. Ensure your Google Cloud project has a Kubernetes cluster
 2. Fetch the Kubernetes context for your GCP cluster:
    ```
    gcloud container clusters get-credentials <cluster-name> --region <region> --project <project-id>
@@ -94,4 +94,4 @@ This builds all service images, deploys them to your local cluster, and watches 
 skaffold run -p gcp
 ```
 
-This builds service images on GCP via Cloud Build, pushes them to Artifact Registry, and deploys them to your GKE cluster. Unlike `skaffold dev`, it is a one-shot deploy with no file watching. Run `kubectl get ingress` to get the IP addres for the app in GCP.
+This builds service images locally, pushes them to Artifact Registry, and deploys them to your GKE cluster. Unlike `skaffold dev`, it is a one-shot deploy with no file watching. Run `kubectl get ingress` to get the IP addres for the app in GCP.

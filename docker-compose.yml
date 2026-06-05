@@ -3,3 +3,7 @@ services:
     build: ./auth
     ports:
       - "3000:3000"
+  hedgehog-consultancy:
+    build: ./hedgehog-consultancy
+    ports:
+      - "3001:3001"

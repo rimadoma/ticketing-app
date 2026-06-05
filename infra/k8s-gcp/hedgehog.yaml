@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: auth-deployment
+  name: hedgehog-consultancy-deployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: auth
+      app: hedgehog-consultancy
   template:
     metadata:
       labels:
-        app: auth
+        app: hedgehog-consultancy
     spec:
       containers:
-        - name: auth
-          image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/auth:latest
+        - name: hedgehog-consultancy
+          image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/hedgehog-consultancy:latest
           resources:
             requests:
               cpu: 250m
@@ -26,13 +26,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: auth-service
+  name: hedgehog-consultancy-service
 spec:
   type: ClusterIP
   selector:
-    app: auth
+    app: hedgehog-consultancy
   ports:
-    - name: auth
+    - name: hedgehog-consultancy
       protocol: TCP
-      port: 3000
-      targetPort: 3000
+      port: 3001
+      targetPort: 3001
