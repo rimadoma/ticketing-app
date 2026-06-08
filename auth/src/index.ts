@@ -1,17 +1,21 @@
-import type { FastifyInstance } from 'fastify';
 import Fastify from 'fastify';
+import type { FastifyInstance } from 'fastify';
+import { serializerCompiler, validatorCompiler } from '@fastify/type-provider-zod';
+import { currentUserRoutes } from './routes/currentuser.js';
+import { signupRoutes } from './routes/signup.js';
+import { signinRoutes } from './routes/signin.js';
+import { signoutRoutes } from './routes/signout.js';
 
 const _port = 3000;
 
-async function routes(fastify: FastifyInstance, _: any): Promise<void> {
-    fastify.get('/api/users/currentuser', async (_request, reply) => {
-        return reply.code(200).send("Hello");
-    });
-}
-
 async function createApp(): Promise<FastifyInstance> {
     const instance = Fastify();
-    instance.register(routes);
+    instance.setValidatorCompiler(validatorCompiler);
+    instance.setSerializerCompiler(serializerCompiler);
+    instance.register(currentUserRoutes);
+    instance.register(signupRoutes);
+    instance.register(signinRoutes);
+    instance.register(signoutRoutes);
     await instance.listen({ port: _port, host: "0.0.0.0" });
     return instance;
 }
