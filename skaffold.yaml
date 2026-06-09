@@ -9,13 +9,13 @@ build:
     push: false
   artifacts:
     - image: richdgo4/auth
-      context: auth
+      context: .
       docker:
-        dockerfile: Dockerfile
+        dockerfile: auth/Dockerfile
       sync:
         manual:
-          - src: "src/**/*.ts"
-            dest: "."
+          - src: "auth/src/**/*.ts"
+            dest: "auth/."
     - image: richdgo4/hedgehog-consultancy
       context: hedgehog-consultancy
       docker:
@@ -36,13 +36,13 @@ profiles:
         push: true
       artifacts:
         - image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/auth
-          context: auth
+          context: .
           docker:
-            dockerfile: Dockerfile
+            dockerfile: auth/Dockerfile
           sync:
             manual:
-              - src: "src/**/*.ts"
-                dest: "."
+              - src: "auth/src/**/*.ts"
+                dest: "auth/."
         - image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/hedgehog-consultancy
           context: hedgehog-consultancy
           docker:
