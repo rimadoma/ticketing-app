@@ -33,6 +33,18 @@ export class AppError extends CustomError {
     }
 }
 
+export class NotFoundError extends CustomError {
+    statusCode = 404;
+
+    constructor() {
+        super('Not found');
+    }
+
+    serializeErrors(): SerializedError {
+        return { statusCode: this.statusCode, errors: [{ message: 'Not found' }] };
+    }
+}
+
 export function schemaErrorFormatter(errors: FastifySchemaValidationError[], _dataVar: string): RequestValidationError {
     const fieldErrors = errors.filter(e => e.instancePath).map(e => {
         const field = e.instancePath.replace(/^\//, '');
