@@ -3,7 +3,7 @@ kind: Config
 manifests:
   rawYaml:
     - ./infra/k8s/*
-# Default local build    
+# Default local build & deploy    
 build:
   local:
     push: false
@@ -26,6 +26,7 @@ build:
             dest: "."
 
 profiles:
+  # Deploy to GCP
   - name: gcp
     manifests:
       rawYaml:
