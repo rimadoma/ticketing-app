@@ -1,21 +1,33 @@
 import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
 import { serializerCompiler, validatorCompiler } from '@fastify/type-provider-zod';
-import { errorHandler, schemaErrorFormatter, NotFoundError } from '@ticketing/common';
+import { errorHandler, schemaErrorFormatter, NotFoundError, AppError } from '@ticketing/common';
 import { currentUserRoutes } from './routes/currentuser.js';
 import { signupRoutes } from './routes/signup.js';
 import { signinRoutes } from './routes/signin.js';
 import { signoutRoutes } from './routes/signout.js';
+import mongoose from 'mongoose';
 
 const _port = 3000;
+const _mongoPort = 27017;
+const _dbName = 'auth';
+
+async function openDbConnection(): Promise<void> {
+    try {
+        await mongoose.connect(`mongodb://auth-mongo-service:${_mongoPort}/${_dbName}`);
+    } catch (err) {
+        throw new AppError(err, 1234);
+    }
+}
 
 async function createApp(): Promise<FastifyInstance> {
+
     const instance = Fastify();
-    
+
     instance.setValidatorCompiler(validatorCompiler);
     instance.setSerializerCompiler(serializerCompiler);
     instance.setSchemaErrorFormatter(schemaErrorFormatter);
-    
+
     instance.setNotFoundHandler(() => { throw new NotFoundError(); });
 
     instance.setErrorHandler(errorHandler);
@@ -24,9 +36,11 @@ async function createApp(): Promise<FastifyInstance> {
     instance.register(signupRoutes);
     instance.register(signinRoutes);
     instance.register(signoutRoutes);
-    
+
+    openDbConnection();
+
     await instance.listen({ port: _port, host: "0.0.0.0" });
-    
+
     return instance;
 }
 

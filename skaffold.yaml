@@ -16,14 +16,14 @@ build:
         manual:
           - src: "auth/src/**/*.ts"
             dest: "auth/."
-    - image: richdgo4/hedgehog-consultancy
-      context: hedgehog-consultancy
-      docker:
-        dockerfile: Dockerfile
-      sync:
-        manual:
-          - src: "src/**/*.ts"
-            dest: "."
+            
+# Expose MongoDB for easier local testing
+portForward:
+  - resourceType: service
+    resourceName: auth-mongo-service
+    namespace: default
+    port: 27017
+    localPort: 27017
 
 profiles:
   # Deploy to GCP

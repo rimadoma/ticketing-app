@@ -1,1 +1,1 @@
-export { errorHandler, schemaErrorFormatter, RequestValidationError, AppError, NotFoundError } from './error-handler.js';
+export { errorHandler, schemaErrorFormatter, RequestValidationError, BadRequestError, AppError, NotFoundError } from './error-handler.js';

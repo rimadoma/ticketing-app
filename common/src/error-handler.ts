@@ -6,7 +6,10 @@ type SerializedError = { statusCode: number; errors: FieldError[]; errorId?: num
 
 export abstract class CustomError extends Error {
     abstract statusCode: number;
-    abstract serializeErrors(): SerializedError;
+
+    serializeErrors(): SerializedError {
+        return { statusCode: this.statusCode, errors: [{ message: this.message }] };
+    }
 }
 
 export class RequestValidationError extends CustomError {
@@ -24,12 +27,21 @@ export class RequestValidationError extends CustomError {
 export class AppError extends CustomError {
     statusCode = 500;
 
-    constructor(public errorId: number) {
-        super('Something went wrong');
+    constructor(err: unknown, public errorId: number) {
+        const reason = err instanceof Error ? err.message : String(err);
+        super(reason);
     }
 
     serializeErrors(): SerializedError {
         return { statusCode: this.statusCode, errorId: this.errorId, errors: [{ message: 'Something went wrong' }] };
+    }
+}
+
+export class BadRequestError extends CustomError {
+    statusCode = 400;
+
+    constructor(public message: string) {
+        super(message);
     }
 }
 
@@ -38,10 +50,6 @@ export class NotFoundError extends CustomError {
 
     constructor() {
         super('Not found');
-    }
-
-    serializeErrors(): SerializedError {
-        return { statusCode: this.statusCode, errors: [{ message: 'Not found' }] };
     }
 }
 
@@ -54,5 +62,9 @@ export function schemaErrorFormatter(errors: FastifySchemaValidationError[], _da
 }
 
 export function errorHandler(error: CustomError, _request: FastifyRequest, reply: FastifyReply): object {
+    if (error instanceof AppError) {
+        console.error(error.message);
+    }
+
     return reply.code(error.statusCode).send(error.serializeErrors());
 }
