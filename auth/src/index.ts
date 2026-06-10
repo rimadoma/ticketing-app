@@ -1,5 +1,6 @@
 import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
+
 import { serializerCompiler, validatorCompiler } from '@fastify/type-provider-zod';
 import { errorHandler, schemaErrorFormatter, NotFoundError, AppError } from '@ticketing/common';
 import { currentUserRoutes } from './routes/currentuser.js';
@@ -7,6 +8,7 @@ import { signupRoutes } from './routes/signup.js';
 import { signinRoutes } from './routes/signin.js';
 import { signoutRoutes } from './routes/signout.js';
 import mongoose from 'mongoose';
+import fastifyCookie from '@fastify/cookie';
 
 const _port = 3000;
 const _mongoPort = 27017;
@@ -22,7 +24,9 @@ async function openDbConnection(): Promise<void> {
 
 async function createApp(): Promise<FastifyInstance> {
 
-    const instance = Fastify();
+    const instance = Fastify({ trustProxy: true });
+
+    instance.register(fastifyCookie);
 
     instance.setValidatorCompiler(validatorCompiler);
     instance.setSerializerCompiler(serializerCompiler);
@@ -43,6 +47,10 @@ async function createApp(): Promise<FastifyInstance> {
 
     return instance;
 }
+
+// if (!process.env.JWT_KEY) {
+//     throw new Error('JWT_KEY must be defined');
+// }
 
 await createApp();
 console.log(`Listening on ${_port}`)

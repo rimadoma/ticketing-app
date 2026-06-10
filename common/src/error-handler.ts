@@ -61,10 +61,18 @@ export function schemaErrorFormatter(errors: FastifySchemaValidationError[], _da
     return new RequestValidationError(fieldErrors.length > 0 ? fieldErrors : [{ message: 'Invalid request' }]);
 }
 
-export function errorHandler(error: CustomError, _request: FastifyRequest, reply: FastifyReply): object {
-    if (error instanceof AppError) {
+export function errorHandler(error: Error, _request: FastifyRequest, reply: FastifyReply): void {
+    let customError: CustomError;
+
+    if (!(error instanceof CustomError)) {
+        customError = new AppError(error, 9999);
+    } else {
+        customError = error;
+    }
+        
+    if (error instanceof AppError || error instanceof BadRequestError) {
         console.error(error.message);
     }
 
-    return reply.code(error.statusCode).send(error.serializeErrors());
+    void reply.code(customError.statusCode).send(customError.serializeErrors());
 }

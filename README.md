@@ -14,6 +14,16 @@ npm run dev
 
 Check the service's index.ts for its port, e.g. http://localhost:3000
 
+#### Environment variables
+
+Some services require environment variables that are normally injected by Kubernetes. Set these in your shell before running:
+
+| Variable  | Service | Description                  |
+|-----------|---------|------------------------------|
+| `JWT_KEY` | auth    | Secret used to sign JWTs — any string works locally |
+
+For example on Windows: `set JWT_KEY=anysecretyouwant`.
+
 ### Kubernetes (w. Skaffold)
 
 Install Skaffold by following the instructions at https://skaffold.dev/docs/install/
