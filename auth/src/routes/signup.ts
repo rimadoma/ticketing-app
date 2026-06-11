@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { type UserCredentials, userCredentialsSchema } from './user-credentials.js';
 import { UserModel } from '../models/user.js';
 import { AppError, BadRequestError } from '@ticketing/common';
-import jwt from 'jsonwebtoken';
+import { Jwt } from '../utils/jwt.js';
 
 export async function signupRoutes(fastify: FastifyInstance): Promise<void> {
     fastify.post<{ Body: UserCredentials }>('/api/users/signup', { schema: userCredentialsSchema },
@@ -15,21 +15,17 @@ export async function signupRoutes(fastify: FastifyInstance): Promise<void> {
 
             const user = await createNewUser(email, password);
 
-            const token = signToken(user.id, email);
+            const token = Jwt.signToken(user.id, email);
 
-            return reply.cookie("token", token, { httpOnly: true }).code(201).send(user);
+            return reply.cookie("token", token, { httpOnly: true, secure: 'auto', sameSite: 'strict' }).code(201).send(user);
         });
 }
 
 async function isExistingUser(email: string): Promise<boolean> {
-    return await UserModel.findOne({ email: email }) !== null;
-}
-
-function signToken(userId: string, email: string): string {
     try {
-        return jwt.sign({ id: userId, email: email }, process.env.JWT_KEY!, { expiresIn: '15m' });
+        return await UserModel.findOne({ email: email }) !== null;
     } catch (err) {
-        throw new AppError(err, 1236);
+        throw new AppError(err, 1234);
     }
 }
 

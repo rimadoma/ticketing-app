@@ -19,7 +19,7 @@ async function openDbConnection(): Promise<void> {
     try {
         await mongoose.connect(`mongodb://${_mongoURL}:${_mongoPort}/${_dbName}`);
     } catch (err) {
-        throw new AppError(err, 1234);
+        throw new AppError(err, 1233);
     }
 }
 
