@@ -2,7 +2,7 @@ import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
 
 import { serializerCompiler, validatorCompiler } from '@fastify/type-provider-zod';
-import { errorHandler, schemaErrorFormatter, NotFoundError, AppError } from '@ticketing/common';
+import { errorHandler, schemaErrorFormatter, NotFoundError, AppError, currentUserPlugin } from '@ticketing/common';
 import { currentUserRoutes } from './routes/currentuser.js';
 import { signupRoutes } from './routes/signup.js';
 import { signinRoutes } from './routes/signin.js';
@@ -36,6 +36,8 @@ async function createApp(): Promise<FastifyInstance> {
     instance.setNotFoundHandler(() => { throw new NotFoundError(); });
 
     instance.setErrorHandler(errorHandler);
+
+    instance.register(currentUserPlugin);
 
     instance.register(currentUserRoutes);
     instance.register(signupRoutes);
