@@ -15,6 +15,12 @@ spec:
       containers:
         - name: auth
           image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/auth:latest
+          env:
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_KEY
           resources:
             requests:
               cpu: 250m

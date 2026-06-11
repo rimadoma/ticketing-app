@@ -14,9 +14,10 @@ export async function signupRoutes(fastify: FastifyInstance): Promise<void> {
             }
 
             const user = await createNewUser(email, password);
+
             const token = signToken(user.id, email);
 
-            return reply.cookie("token", token, { httpOnly: true }).code(201).send({});
+            return reply.cookie("token", token, { httpOnly: true }).code(201).send(user);
         });
 }
 
@@ -26,7 +27,7 @@ async function isExistingUser(email: string): Promise<boolean> {
 
 function signToken(userId: string, email: string): string {
     try {
-        return jwt.sign({ id: userId, email }, process.env.JWT_KEY!, { expiresIn: '15m' });
+        return jwt.sign({ id: userId, email: email }, process.env.JWT_KEY!, { expiresIn: '15m' });
     } catch (err) {
         throw new AppError(err, 1236);
     }

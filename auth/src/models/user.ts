@@ -1,6 +1,15 @@
 import bcrypt from 'bcrypt';
-import { pre, prop, getModelForClass } from '@typegoose/typegoose';
+import { pre, prop, getModelForClass, modelOptions } from '@typegoose/typegoose';
 
+@modelOptions({
+    schemaOptions: {
+        toJSON: {
+            transform(_doc, ret) {
+                return { id: ret._id.toString(), email: ret.email };
+            }
+        }
+    }
+})
 // Hashes the password before any save that modifies it — covers both initial insert and
 // explicit password changes. isModified guards against rehashing an already-hashed value
 // on unrelated saves (e.g. a future profile update). Note: this logic lives here because

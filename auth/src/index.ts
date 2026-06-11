@@ -10,13 +10,14 @@ import { signoutRoutes } from './routes/signout.js';
 import mongoose from 'mongoose';
 import fastifyCookie from '@fastify/cookie';
 
+const _mongoURL = 'auth-mongo-service';
 const _port = 3000;
 const _mongoPort = 27017;
 const _dbName = 'auth';
 
 async function openDbConnection(): Promise<void> {
     try {
-        await mongoose.connect(`mongodb://auth-mongo-service:${_mongoPort}/${_dbName}`);
+        await mongoose.connect(`mongodb://${_mongoURL}:${_mongoPort}/${_dbName}`);
     } catch (err) {
         throw new AppError(err, 1234);
     }
@@ -48,9 +49,9 @@ async function createApp(): Promise<FastifyInstance> {
     return instance;
 }
 
-// if (!process.env.JWT_KEY) {
-//     throw new Error('JWT_KEY must be defined');
-// }
+if (!process.env.JWT_KEY) {
+    throw new Error('JWT_KEY must be defined');
+}
 
 await createApp();
 console.log(`Listening on ${_port}`)

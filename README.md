@@ -1,8 +1,10 @@
 # Ticketing App
 
-## Running Locally
+## Running
 
-### Directly
+NB there are no config files, so you may need to change many hard-coded consts, e.g. cluster url to localhost
+
+### Standalone locally
 
 Each service lives in its own directory. To run a service, e.g. auth:
 
@@ -12,7 +14,7 @@ npm install
 npm run dev
 ```
 
-Check the service's index.ts for its port, e.g. http://localhost:3000
+The service will be available at `http://localhost:<port>/<route>`, e.g. auth at `http://localhost:3000/api/users/signup`
 
 #### Environment variables
 
@@ -38,6 +40,10 @@ You can run the apps on a local cluster or deploy them to GCP — pick one of th
    ```bash
    kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.15.1/deploy/static/provider/cloud/deploy.yaml
    ```
+3. Create the JWT signing key 
+   ```bash
+   kubectl create secret generic jwt-secret --from-literal=JWT_KEY=mysupersecretthingy
+   ```
 
 **Run:**
 ```bash
@@ -45,6 +51,8 @@ skaffold dev
 ```
 
 This builds all service images, deploys them to your local cluster, and watches for file changes — syncing `.ts` files directly into running containers without a full rebuild. The app will be available at `http://localhost`.
+
+The app will be available at `http://localhost`, e.g. `http://localhost/api/users/signup`
 
 #### Option 2: GCP cluster
 
@@ -67,6 +75,12 @@ This builds all service images, deploys them to your local cluster, and watches 
    ```
    gcloud artifacts repositories create ticketing --repository-format=docker --location=europe-north1 --project=project-809e066d-e5ea-4d42-aa1
    ```
+5. Create a secret with Secret Manager called `JWT_KEY`
+6. Pull the value from Secret Manager
+   ```
+   for /f "delims=" %i in ('gcloud secrets versions access latest --secret=JWT_KEY') do set JWT_VAL=%i
+   kubectl create secret generic jwt-secret --from-literal=JWT_KEY=%JWT_VAL%
+   ```
 
 **Cluster setup:**
 1. Ensure your Google Cloud project has a Kubernetes cluster
@@ -88,6 +102,7 @@ This builds all service images, deploys them to your local cluster, and watches 
      ```
      gcloud projects add-iam-policy-binding project-809e066d-e5ea-4d42-aa1 --member="serviceAccount:<PROJECT_NUMBER>-compute@developer.gserviceaccount.com" --role="roles/artifactregistry.reader"
      ```
+5. Run `kubectl get ingress` to see the external IP of the cluster.
 
 **Resuming dev:**
 1. Authenticate gcloud with your Google credentials:
@@ -97,11 +112,13 @@ This builds all service images, deploys them to your local cluster, and watches 
 2. Verify kubectl is pointing at the GKE cluster:
    ```
    kubectl config current-context
-   ```
+   ```   
 
 **Run:**
 ```bash
 skaffold run -p gcp
 ```
 
-This builds service images locally, pushes them to Artifact Registry, and deploys them to your GKE cluster. Unlike `skaffold dev`, it is a one-shot deploy with no file watching. Run `kubectl get ingress` to get the IP addres for the app in GCP.
+This builds service images locally, pushes them to Artifact Registry, and deploys them to your GKE cluster. Unlike `skaffold dev`, it is a one-shot deploy with no file watching. Run `kubectl get ingress` to get the IP address for the app in GCP.
+
+The app will be available at your ingress IP, e.g. `http://35.228.198.217/api/hedgehog/consult`
