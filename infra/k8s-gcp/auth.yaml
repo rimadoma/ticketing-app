@@ -4,6 +4,8 @@ metadata:
   name: auth-deployment
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: auth
@@ -24,10 +26,10 @@ spec:
           resources:
             requests:
               cpu: 250m
-              memory: 512Mi
+              memory: 256Mi
             limits:
               cpu: 250m
-              memory: 512Mi
+              memory: 256Mi
 ---
 apiVersion: v1
 kind: Service

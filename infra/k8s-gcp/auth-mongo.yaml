@@ -15,6 +15,8 @@ metadata:
   name: auth-mongo-deployment
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: auth-mongo
@@ -29,10 +31,10 @@ spec:
           resources:
             requests:
               cpu: 250m
-              memory: 512Mi
+              memory: 256Mi
             limits:
               cpu: 250m
-              memory: 512Mi
+              memory: 256Mi
           volumeMounts:
             - name: auth-mongo-data
               mountPath: /data/db

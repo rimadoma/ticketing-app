@@ -1,14 +1,6 @@
-import Fastify from 'fastify';
-import type { FastifyInstance } from 'fastify';
-
-import { serializerCompiler, validatorCompiler } from '@fastify/type-provider-zod';
-import { errorHandler, schemaErrorFormatter, NotFoundError, AppError, currentUserPlugin, requireAuthPlugin } from '@ticketing/common';
-import { currentUserRoutes } from './routes/currentuser.js';
-import { signupRoutes } from './routes/signup.js';
-import { signinRoutes } from './routes/signin.js';
-import { signoutRoutes } from './routes/signout.js';
+import {  AppError } from '@ticketing/common';
 import mongoose from 'mongoose';
-import fastifyCookie from '@fastify/cookie';
+import { createApp } from './app.js';
 
 const _mongoURL = 'auth-mongo-service';
 const _port = 3000;
@@ -23,40 +15,11 @@ async function openDbConnection(): Promise<void> {
     }
 }
 
-async function createApp(): Promise<FastifyInstance> {
-
-    const instance = Fastify({ trustProxy: true });
-
-    instance.register(fastifyCookie);
-
-    instance.setValidatorCompiler(validatorCompiler);
-    instance.setSerializerCompiler(serializerCompiler);
-    instance.setSchemaErrorFormatter(schemaErrorFormatter);
-
-    instance.setNotFoundHandler(() => { throw new NotFoundError(); });
-
-    instance.setErrorHandler(errorHandler);
-
-    instance.register(currentUserPlugin);
-
-    instance.register(async (protectedScope: FastifyInstance) => {
-        await requireAuthPlugin(protectedScope);
-        protectedScope.register(currentUserRoutes);
-    });
-    instance.register(signupRoutes);
-    instance.register(signinRoutes);
-    instance.register(signoutRoutes);
-
-    openDbConnection();
-
-    await instance.listen({ port: _port, host: "0.0.0.0" });
-
-    return instance;
-}
-
 if (!process.env.JWT_KEY) {
     throw new Error('JWT_KEY must be defined');
 }
 
-await createApp();
+const app = await createApp();
+await openDbConnection();
+await app.listen({ port: _port, host: "0.0.0.0" });
 console.log(`Listening on ${_port}`)

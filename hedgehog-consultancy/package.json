@@ -12,9 +12,7 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
-    "fastify": "^5.8.5"
-  },
-  "devDependencies": {
+    "fastify": "^5.8.5",
     "tsx": "^4.0.0",
     "typescript": "^6.0.3"
   }
