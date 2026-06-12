@@ -2,7 +2,7 @@ import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
 
 import { serializerCompiler, validatorCompiler } from '@fastify/type-provider-zod';
-import { errorHandler, schemaErrorFormatter, NotFoundError, AppError, currentUserPlugin } from '@ticketing/common';
+import { errorHandler, schemaErrorFormatter, NotFoundError, AppError, currentUserPlugin, requireAuthPlugin } from '@ticketing/common';
 import { currentUserRoutes } from './routes/currentuser.js';
 import { signupRoutes } from './routes/signup.js';
 import { signinRoutes } from './routes/signin.js';
@@ -39,7 +39,10 @@ async function createApp(): Promise<FastifyInstance> {
 
     instance.register(currentUserPlugin);
 
-    instance.register(currentUserRoutes);
+    instance.register(async (protectedScope: FastifyInstance) => {
+        await requireAuthPlugin(protectedScope);
+        protectedScope.register(currentUserRoutes);
+    });
     instance.register(signupRoutes);
     instance.register(signinRoutes);
     instance.register(signoutRoutes);

@@ -53,6 +53,14 @@ export class NotFoundError extends CustomError {
     }
 }
 
+export class UnauthorizedError extends CustomError {
+    statusCode = 401;
+
+    constructor() {
+        super('Unauthorized');
+    }
+}
+
 export function schemaErrorFormatter(errors: FastifySchemaValidationError[], _dataVar: string): RequestValidationError {
     const fieldErrors = errors.filter(e => e.instancePath).map(e => {
         const field = e.instancePath.replace(/^\//, '');
