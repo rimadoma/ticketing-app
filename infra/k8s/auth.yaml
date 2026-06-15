@@ -21,6 +21,8 @@ spec:
                 secretKeyRef:
                   name: jwt-secret
                   key: JWT_KEY
+            - name: NODE_ENV
+              value: "dev"
 ---
 apiVersion: v1
 kind: Service

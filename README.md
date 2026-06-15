@@ -14,7 +14,9 @@ npm install
 npm run dev
 ```
 
-The service will be available at `http://localhost:<port>/<route>`, e.g. auth at `http://localhost:3000/api/users/signup`
+The service will be available at `https://localhost:<port>/<route>`, e.g. auth at `https://localhost:3000/api/users/signup`
+
+> **Note:** Auth cookies require HTTPS (`secure: true`). Use a tool that supports HTTPS (e.g. Postman with SSL verification disabled, or a self-signed cert) when testing cookie-based flows locally.
 
 #### Environment variables
 
@@ -23,6 +25,7 @@ Some services require environment variables that are normally injected by Kubern
 | Variable  | Service | Description                  |
 |-----------|---------|------------------------------|
 | `JWT_KEY` | auth    | Secret used to sign JWTs — any string works locally |
+| `NODE_ENV`| auth    | Set to 'dev' to disables secure: true (https) |
 
 For example on Windows: `set JWT_KEY=anysecretyouwant`.
 
@@ -44,15 +47,12 @@ You can run the apps on a local cluster or deploy them to GCP — pick one of th
    ```bash
    kubectl create secret generic jwt-secret --from-literal=JWT_KEY=mysupersecretthingy
    ```
-
 **Run:**
 ```bash
 skaffold dev
 ```
 
-This builds all service images, deploys them to your local cluster, and watches for file changes — syncing `.ts` files directly into running containers without a full rebuild. The app will be available at `http://localhost`.
-
-The app will be available at `http://localhost`, e.g. `http://localhost/api/users/signup`
+This builds all service images, deploys them to your local cluster, and watches for file changes — syncing `.ts` files directly into running containers without a full rebuild. The app will be available at `http://localhost`, e.g. `http://localhost/api/users/signup`.
 
 #### Option 2: GCP cluster
 

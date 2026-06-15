@@ -1,8 +1,8 @@
 import request from 'supertest';
 import { describe, it, expect } from 'vitest';
-import { app, setup } from './setup.js'
+import { app, testInfra } from './test-utils.js'
 
-setup();
+testInfra();
 
 describe('POST /api/users/signup', () => {
     it('returns 201 on successful signup', async () => {
@@ -47,10 +47,10 @@ describe('POST /api/users/signup', () => {
             .expect(400);
     });
 
-    it('returns 400 when email or password is missing', async () => {
+    it('returns 400 when email is missing', async () => {
         await request(app.server)
             .post('/api/users/signup')
-            .send({})
+            .send({ password: 'validPassword' })
             .expect(400);
     });
 });
