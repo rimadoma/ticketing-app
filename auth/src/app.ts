@@ -2,7 +2,7 @@ import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
 
 import { serializerCompiler, validatorCompiler } from '@fastify/type-provider-zod';
-import { errorHandler, schemaErrorFormatter, NotFoundError, AppError, currentUserPlugin, requireAuthPlugin } from '@ticketing/common';
+import { errorHandler, schemaErrorFormatter, NotFoundError, currentUserPlugin, requireAuthPlugin } from '@ticketing/common';
 import { currentUserRoutes } from './routes/currentuser.js';
 import { signupRoutes } from './routes/signup.js';
 import { signinRoutes } from './routes/signin.js';
