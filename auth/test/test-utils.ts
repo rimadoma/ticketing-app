@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, afterAll } from 'vitest';
+import { beforeAll, beforeEach, afterAll, expect } from 'vitest';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
 import request from 'supertest';
@@ -38,10 +38,13 @@ export function testInfra() {
     });
 }
 
-export async function createUser(credentials: { email: string; password: string }) {
-    return request(app.server)
+export async function createUser(credentials: { email: string; password: string }): Promise<string[]> {
+    const response = await request(app.server)
         .post('/api/users/signup')
         .send(credentials)
         .expect(201);
+    const cookie = response.get('Set-Cookie');
+    expect(cookie).toBeDefined();
+    return cookie!;    
 }
 
