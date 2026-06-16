@@ -31,10 +31,16 @@ For example on Windows: `set JWT_KEY=anysecretyouwant`.
 
 ### Building Docker images manually
 
-Images must be built from the **repo root** (the directory containing this README), not from within service subdirectories. For example, 
+`auth` must be built from the **repo root** because its Dockerfile references `common/`:
 
 ```bash
-docker build -t richdgo4/auth   -f auth/Dockerfile   .
+docker build -t richdgo4/auth -f auth/Dockerfile .
+```
+
+`client` can be built from its own directory:
+
+```bash
+cd client && docker build -t richdgo4/client .
 ```
 
 ### Kubernetes (w. Skaffold)

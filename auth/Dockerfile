@@ -6,5 +6,4 @@ RUN cd common && npm install && npm run build
 COPY auth/ ./auth/
 RUN cd auth && npm install --omit=dev
 
-WORKDIR /app/auth
-CMD ["npm", "start"]
+CMD ["npm", "--prefix", "auth", "run", "dev"]

@@ -15,15 +15,15 @@ build:
       sync:
         manual:
           - src: "auth/src/**/*.ts"
-            dest: "auth/."
+            dest: "."
     - image: richdgo4/client
-      context: .
+      context: client
       docker:
-        dockerfile: client/Dockerfile
+        dockerfile: Dockerfile
       sync:
         manual:
-          - src: "client/pages/**/*.js"
-            dest: "client/."
+          - src: "pages/**/*.js"
+            dest: "."
             
 # Expose MongoDB for easier local testing
 portForward:
@@ -50,15 +50,15 @@ profiles:
           sync:
             manual:
               - src: "auth/src/**/*.ts"
-                dest: "auth/."
+                dest: "."
         - image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/client
-          context: .
+          context: client
           docker:
-            dockerfile: client/Dockerfile
+            dockerfile: Dockerfile
           sync:
             manual:
-              - src: "client/pages/**/*.js"
-                dest: "client/."
+              - src: "pages/**/*.js"
+                dest: "."
         - image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/hedgehog-consultancy
           context: hedgehog-consultancy
           docker:

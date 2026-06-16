@@ -40,14 +40,19 @@ cd ../auth && npm install   # re-links the local file: dependency
 
 ## Docker Builds
 
-All Docker images must be built from the **repo root**, not from within a service directory — Dockerfiles reference sibling directories (`auth/`, `client/`, `common/`):
+`auth/Dockerfile` uses `context: .` (repo root) because it needs access to `common/`. Build it from the repo root:
 
 ```bash
-docker build -t richdgo4/auth   -f auth/Dockerfile   .
-docker build -t richdgo4/client -f client/Dockerfile .
+docker build -t richdgo4/auth -f auth/Dockerfile .
 ```
 
-A single `.dockerignore` at the repo root covers all services. Do not add per-service `.dockerignore` files.
+`client/Dockerfile` uses `context: client` — build it from the `client/` directory:
+
+```bash
+cd client && docker build -t richdgo4/client .
+```
+
+Each has its own `.dockerignore`: the root one covers `auth` (and `common`); `client/.dockerignore` covers the client.
 
 ## Running the Full Stack
 
@@ -58,8 +63,10 @@ skaffold run -p gcp   # one-shot deploy to GCP (no file watching)
 ```
 
 Skaffold syncs source files directly into running containers without a full image rebuild:
-- Backend services (`.ts`): `auth/src/**/*.ts`
-- Frontend (`client/`): `client/pages/**/*.js`
+- `auth`: `auth/src/**/*.ts` (context: repo root)
+- `client`: `pages/**/*.js` (context: `client/`)
+
+`client` runs webpack (`next dev --webpack`) instead of Turbopack because Skaffold's sync uses `kubectl cp`, which doesn't trigger inotify events. Webpack is configured to poll every 300ms in `next.config.js` so it detects synced files.
 
 ## Architecture
 
