@@ -4,12 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A backend-focused microservices ticketing app. Services are independently deployable Node.js/TypeScript apps orchestrated with Kubernetes and Skaffold. All services use Fastify with Zod validation.
+A microservices ticketing app. Backend services are independently deployable Node.js/TypeScript apps using Fastify with Zod validation. The frontend is a plain JavaScript Next.js app (Pages Router). All services are orchestrated with Kubernetes and Skaffold.
 
 ## Repository Structure
 
 ```
 auth/               # Auth service (port 3000) — /api/users/*
+client/             # Next.js frontend (port 3000) — catch-all /
 common/             # Shared library (@ticketing/common) — published locally via file: reference
 infra/
   k8s/              # Local Kubernetes manifests
@@ -37,20 +38,28 @@ cd common && npm run build
 cd ../auth && npm install   # re-links the local file: dependency
 ```
 
+## Docker Builds
+
+All Docker images must be built from the **repo root**, not from within a service directory — Dockerfiles reference sibling directories (`auth/`, `client/`, `common/`):
+
+```bash
+docker build -t richdgo4/auth   -f auth/Dockerfile   .
+docker build -t richdgo4/client -f client/Dockerfile .
+```
+
+A single `.dockerignore` at the repo root covers all services. Do not add per-service `.dockerignore` files.
+
 ## Running the Full Stack
 
 **Kubernetes (recommended for integration):**
 ```bash
-skaffold dev          # local cluster — builds images, deploys, watches .ts file changes
+skaffold dev          # local cluster — builds images, deploys, watches for file changes
 skaffold run -p gcp   # one-shot deploy to GCP (no file watching)
 ```
 
-Skaffold syncs `.ts` source files directly into running containers without a full image rebuild.
-
-**Docker Compose (simpler alternative):**
-```bash
-docker compose up --build
-```
+Skaffold syncs source files directly into running containers without a full image rebuild:
+- Backend services (`.ts`): `auth/src/**/*.ts`
+- Frontend (`client/`): `client/pages/**/*.js`
 
 ## Architecture
 
@@ -65,6 +74,10 @@ docker compose up --build
 
 After changing `common/src/`, always rebuild (`npm run build` in `common/`) before the changes are visible to services — services import from `common/dist/`.
 
+### Frontend (`client/`)
+
+Next.js Pages Router app in plain JavaScript. Bootstrap CSS is imported globally in `pages/_app.js` — use Bootstrap classes for all styling rather than custom CSS.
+
 ### Service Structure (`auth/` as the reference pattern)
 
 Each service wires up Fastify in `src/index.ts`:
@@ -76,11 +89,14 @@ Routes define Zod schemas inline or in a sibling `*-schema.ts` / `*-credentials.
 
 ### Kubernetes / Ingress
 
-The NGINX Ingress controller routes by path prefix to each service's ClusterIP:
+The NGINX Ingress controller routes by path to each service's ClusterIP:
 
-| Path pattern     | Service             | Port |
-|------------------|---------------------|------|
-| `/api/users/.*`  | `auth-service`      | 3000 |
+| Path pattern    | Service          | Port |
+|-----------------|------------------|------|
+| `/api/users/.*` | `auth-service`   | 3000 |
+| `/`             | `client-service` | 3000 |
+
+Rules are evaluated most-specific first. `/` is the catch-all for the Next.js frontend — unknown routes return a 404 from Next.js, not the ingress.
 
 Each new service needs a Deployment + ClusterIP Service manifest in `infra/k8s/` and a corresponding path rule in `infra/k8s/ingress-srv.yaml`. The GCP equivalents live in `infra/k8s-gcp/` with Artifact Registry image paths.
 

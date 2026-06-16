@@ -23,3 +23,10 @@ spec:
             name: hedgehog-consultancy-service
             port:
               number: 3001
+      - path: /
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: client-service
+            port:
+              number: 3000

@@ -29,6 +29,14 @@ Some services require environment variables that are normally injected by Kubern
 
 For example on Windows: `set JWT_KEY=anysecretyouwant`.
 
+### Building Docker images manually
+
+Images must be built from the **repo root** (the directory containing this README), not from within service subdirectories. For example, 
+
+```bash
+docker build -t richdgo4/auth   -f auth/Dockerfile   .
+```
+
 ### Kubernetes (w. Skaffold)
 
 Install Skaffold by following the instructions at https://skaffold.dev/docs/install/
