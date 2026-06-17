@@ -16,8 +16,6 @@ npm run dev
 
 The service will be available at `https://localhost:<port>/<route>`, e.g. auth at `https://localhost:3000/api/users/signup`
 
-> **Note:** Auth cookies require HTTPS (`secure: true`). Use a tool that supports HTTPS (e.g. Postman with SSL verification disabled, or a self-signed cert) when testing cookie-based flows locally.
-
 #### Environment variables
 
 Some services require environment variables that are normally injected by Kubernetes. Set these in your shell before running:
@@ -25,9 +23,10 @@ Some services require environment variables that are normally injected by Kubern
 | Variable  | Service | Description                  |
 |-----------|---------|------------------------------|
 | `JWT_KEY` | auth    | Secret used to sign JWTs — any string works locally |
-| `NODE_ENV`| auth    | Set to 'dev' to disables secure: true (https) |
 
 For example on Windows: `set JWT_KEY=anysecretyouwant`.
+
+> **Note:** Auth cookies use `secure: 'auto'`, so they work over plain HTTP locally without any extra configuration.
 
 ### Building Docker images manually
 

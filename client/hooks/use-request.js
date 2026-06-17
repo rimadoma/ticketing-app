@@ -16,7 +16,7 @@ function ErrorAlert({ errors }) {
     );
 }
 
-const useRequest = ({ url, method, body }) => {
+const useRequest = ({ url, method, body, onSuccess }) => {
     const [errors, setErrors] = useState(null);
 
     const doRequest = async () => {
@@ -29,6 +29,11 @@ const useRequest = ({ url, method, body }) => {
         try {
             setErrors(null);
             const response = await methodRef(url, body);
+
+            if (onSuccess) {
+                onSuccess(response.data);
+            }
+
             return response.data;
         } catch (err) {
             setErrors(<ErrorAlert errors={err.response?.data?.errors ?? [{ message: 'Something went wrong' }]} />);

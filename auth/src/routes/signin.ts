@@ -24,9 +24,7 @@ export async function signinRoutes(fastify: FastifyInstance): Promise<void> {
 
         const token = Jwt.signToken(dbUser.id, dbUser.email);
 
-        const secure = process.env['NODE_ENV'] !== 'dev' && process.env['NODE_ENV'] !== 'test';
-
-        return reply.cookie("token", token, { httpOnly: true, secure: secure, sameSite: 'strict' }).code(200).send(dbUser);
+        return reply.cookie("token", token, { httpOnly: true, secure: 'auto', sameSite: 'strict', path: '/' }).code(200).send(dbUser);
     });
 }
 
