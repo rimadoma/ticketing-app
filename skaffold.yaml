@@ -54,11 +54,7 @@ profiles:
         - image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/client
           context: client
           docker:
-            dockerfile: Dockerfile
-          sync:
-            manual:
-              - src: "pages/**/*.js"
-                dest: "."
+            dockerfile: Dockerfile.prod
         - image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/hedgehog-consultancy
           context: hedgehog-consultancy
           docker:

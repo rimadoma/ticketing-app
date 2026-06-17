@@ -46,10 +46,11 @@ cd ../auth && npm install   # re-links the local file: dependency
 docker build -t richdgo4/auth -f auth/Dockerfile .
 ```
 
-`client/Dockerfile` uses `context: client` — build it from the `client/` directory:
+`client/Dockerfile` uses `context: client` — build it from the `client/` directory. Use `Dockerfile.prod` for GCP (runs `next build --webpack && next start`); use the default `Dockerfile` for local dev (runs `next dev --webpack`):
 
 ```bash
-cd client && docker build -t richdgo4/client .
+cd client && docker build -t richdgo4/client .                        # local dev
+cd client && docker build -f Dockerfile.prod -t richdgo4/client .     # GCP / production
 ```
 
 Each has its own `.dockerignore`: the root one covers `auth` (and `common`); `client/.dockerignore` covers the client.
@@ -66,7 +67,9 @@ Skaffold syncs source files directly into running containers without a full imag
 - `auth`: `auth/src/**/*.ts` (context: repo root)
 - `client`: `pages/**/*.js` (context: `client/`)
 
-`client` runs webpack (`next dev --webpack`) instead of Turbopack because Skaffold's sync uses `kubectl cp`, which doesn't trigger inotify events. Webpack is configured to poll every 300ms in `next.config.js` so it detects synced files.
+`client` runs webpack (`next dev --webpack`) instead of Turbopack because Skaffold's sync uses `kubectl cp`, which doesn't trigger inotify events. Webpack is configured to poll every 300ms in `next.config.js` so it detects synced files. `next build` also uses `--webpack` (see `package.json`) — the webpack config in `next.config.js` conflicts with Turbopack at build time.
+
+> **Claude Code note:** Claude's file edits also bypass inotify (same mechanism as `kubectl cp`), so Skaffold won't pick them up automatically. After Claude edits a watched file, make a dummy edit (e.g. add/remove a space) to trigger the sync.
 
 ## Architecture
 

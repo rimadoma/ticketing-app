@@ -1,20 +1,18 @@
 # Ticketing App
 
-## Running
-
-NB there are no config files, so you may need to change many hard-coded consts, e.g. cluster url to localhost
 
 ### Standalone locally
 
-Each service lives in its own directory. To run a service, e.g. auth:
+Testing frontend (client/) standalone will be a major pain in the bum. I don't recommend it. Also, there are no config files, so you may need to change many hard-coded consts, e.g. cluster URL to localhost That being said, each service lives in its own directory. To run a service, e.g. auth:
 
 ```bash
+cd common && npm run build   # auth depends on @ticketing/common — build it first
 cd auth
 npm install
 npm run dev
 ```
 
-The service will be available at `https://localhost:<port>/<route>`, e.g. auth at `https://localhost:3000/api/users/signup`
+The service will be available at `http://localhost:<port>/<route>`, e.g. auth at `http://localhost:3000/api/users/signup`
 
 #### Environment variables
 
@@ -36,10 +34,11 @@ For example on Windows: `set JWT_KEY=anysecretyouwant`.
 docker build -t richdgo4/auth -f auth/Dockerfile .
 ```
 
-`client` can be built from its own directory:
+`client` can be built from its own directory. Use `Dockerfile.prod` for GCP (runs a compiled production build); use the default `Dockerfile` for local dev (runs `next dev`):
 
 ```bash
-cd client && docker build -t richdgo4/client .
+cd client && docker build -t richdgo4/client .                          # local dev
+cd client && docker build -f Dockerfile.prod -t richdgo4/client .       # GCP / production
 ```
 
 ### Kubernetes (w. Skaffold)
