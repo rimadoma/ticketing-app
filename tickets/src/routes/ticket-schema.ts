@@ -3,7 +3,10 @@ import { z } from 'zod';
 export const ticketBodySchema = {
     body: z.object({
         title: z.string().min(1),
-        price: z.string().min(1),
+        price: z.object({
+            amount: z.string().regex(/^\d+(\.\d{1,2})?$/),
+            currency: z.string().length(3).default('EUR'),
+        }),
     }),
 };
 

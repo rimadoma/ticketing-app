@@ -3,9 +3,26 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
 import { createApp } from '../src/app.js';
 import type { FastifyInstance } from 'fastify/types/instance.js';
+import jwt from 'jsonwebtoken';
 
 export let mongo: MongoMemoryServer;
 export let app: FastifyInstance;
+
+export function createJwtCookie() {
+    // Build a JWT payload. { id, email }, ignoring iat, exp
+    const payload = { id: 'JohnDoe', email: 'test@test.com'}
+
+    // Create the JWT
+    const token = jwt.sign(payload, process.env.JWT_KEY!);
+
+    // Build session object { token: MY_JWT }
+
+    // Convert session into JSON
+
+    // Encode as base64
+
+    // return[`token=${base64}`]
+}
 
 export function testInfra() {
     beforeAll(async () => {
