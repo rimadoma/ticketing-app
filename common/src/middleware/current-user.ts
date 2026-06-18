@@ -1,7 +1,7 @@
 import fp from 'fastify-plugin';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import '@fastify/cookie';
-import { Jwt } from './jwt.js';
+import { Jwt } from '../utils/jwt.js';
 
 export interface UserPayload {
     id: string;

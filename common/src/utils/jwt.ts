@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
-import type { UserPayload } from './current-user.js';
-import { AppError } from './error-handler.js';
+import type { UserPayload } from '../middleware/current-user.js';
+import { AppError } from '../errors/custom-error.js';
 
 export class Jwt {
     static signToken(userId: string, email: string): string {

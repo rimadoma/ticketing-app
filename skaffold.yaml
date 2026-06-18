@@ -17,12 +17,12 @@ build:
           - src: "auth/src/**/*.ts"
             dest: "."
     - image: richdgo4/client
-      context: client
+      context: .
       docker:
-        dockerfile: Dockerfile
+        dockerfile: client/Dockerfile
       sync:
         manual:
-          - src: "pages/**/*.js"
+          - src: "client/pages/**/*.js"
             dest: "."
             
 # Expose MongoDB for easier local testing
@@ -52,9 +52,9 @@ profiles:
               - src: "auth/src/**/*.ts"
                 dest: "."
         - image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/client
-          context: client
+          context: .
           docker:
-            dockerfile: Dockerfile.prod
+            dockerfile: client/Dockerfile.prod
         - image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/hedgehog-consultancy
           context: hedgehog-consultancy
           docker:

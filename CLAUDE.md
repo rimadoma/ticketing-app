@@ -11,7 +11,7 @@ A microservices ticketing app. Backend services are independently deployable Nod
 ```
 auth/               # Auth service (port 3000) — /api/users/*
 client/             # Next.js frontend (port 3000) — catch-all /
-common/             # Shared library (@mahonen_consulting_zlc/common) — published locally via file: reference
+common/             # Shared library (@mahonen_consulting_zlc/common) — published to npm
 infra/
   k8s/              # Local Kubernetes manifests
   k8s-gcp/          # GCP Kubernetes manifests
@@ -31,29 +31,22 @@ npm run dev       # run with tsx watch (hot reload)
 npm run build     # compile TypeScript to dist/
 ```
 
-After modifying `common/`, rebuild it and reinstall in the consuming service:
+After modifying `common/`, rebuild, bump the version, publish, then reinstall in consuming services:
 
 ```bash
-cd common && npm run build
-cd ../auth && npm install   # re-links the local file: dependency
+cd common && npm run build && npm publish
+cd ../auth && npm install
 ```
 
 ## Docker Builds
 
-`auth/Dockerfile` uses `context: .` (repo root) because it needs access to `common/`. Build it from the repo root:
+All images are built from the repo root with a single root `.dockerignore`. Use `client/Dockerfile.prod` for GCP (runs `next build --webpack && next start`); use `client/Dockerfile` for local dev (runs `next dev --webpack`):
 
 ```bash
-docker build -t richdgo4/auth -f auth/Dockerfile .
+docker build -t richdgo4/auth   -f auth/Dockerfile .
+docker build -t richdgo4/client -f client/Dockerfile .               # local dev
+docker build -t richdgo4/client -f client/Dockerfile.prod .          # GCP / production
 ```
-
-`client/Dockerfile` uses `context: client` — build it from the `client/` directory. Use `Dockerfile.prod` for GCP (runs `next build --webpack && next start`); use the default `Dockerfile` for local dev (runs `next dev --webpack`):
-
-```bash
-cd client && docker build -t richdgo4/client .                        # local dev
-cd client && docker build -f Dockerfile.prod -t richdgo4/client .     # GCP / production
-```
-
-Each has its own `.dockerignore`: the root one covers `auth` (and `common`); `client/.dockerignore` covers the client.
 
 ## Running the Full Stack
 
@@ -63,9 +56,9 @@ skaffold dev          # local cluster — builds images, deploys, watches for fi
 skaffold run -p gcp   # one-shot deploy to GCP (no file watching)
 ```
 
-Skaffold syncs source files directly into running containers without a full image rebuild:
-- `auth`: `auth/src/**/*.ts` (context: repo root)
-- `client`: `pages/**/*.js` (context: `client/`)
+Skaffold syncs source files directly into running containers without a full image rebuild (both use repo root as context):
+- `auth`: `auth/src/**/*.ts`
+- `client`: `client/pages/**/*.js`
 
 `client` runs webpack (`next dev --webpack`) instead of Turbopack because Skaffold's sync uses `kubectl cp`, which doesn't trigger inotify events. Webpack is configured to poll every 300ms in `next.config.js` so it detects synced files. `next build` also uses `--webpack` (see `package.json`) — the webpack config in `next.config.js` conflicts with Turbopack at build time.
 
@@ -75,12 +68,7 @@ Skaffold syncs source files directly into running containers without a full imag
 
 ### Shared Library (`common/`)
 
-`@mahonen_consulting_zlc/common` is consumed by all services via a local `file:` npm reference. It exports:
-
-- **`CustomError`** — abstract base class all custom errors extend. Requires `statusCode` and `serializeErrors()`. The `errorHandler` registered on each Fastify instance handles any `CustomError` subclass polymorphically.
-- **`RequestValidationError`** (exported as `ValidationError`) — 400, carries field-level errors.
-- **`AppError`** — 500, carries an opaque `errorId` for ops correlation.
-- **`schemaErrorFormatter`** — Fastify schema error hook; converts Zod validation failures into `RequestValidationError`.
+`@mahonen_consulting_zlc/common` is published to npm and consumed by all services. All custom errors extend `CustomError` — throw any subclass from a route and the registered `errorHandler` serializes it correctly.
 
 After changing `common/src/`, always rebuild (`npm run build` in `common/`) before the changes are visible to services — services import from `common/dist/`.
 

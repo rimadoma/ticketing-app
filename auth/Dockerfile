@@ -1,9 +1,9 @@
 FROM node:alpine
 WORKDIR /app
 
-COPY common/ ./common/
-RUN cd common && npm install && npm run build
-COPY auth/ ./auth/
+COPY auth/package.json auth/package-lock.json ./auth/
 RUN cd auth && npm install --omit=dev
+
+COPY auth/ ./auth/
 
 CMD ["npm", "--prefix", "auth", "run", "dev"]

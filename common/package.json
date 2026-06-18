@@ -1,31 +1,28 @@
 {
   "name": "@mahonen_consulting_zlc/common",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Shared library for ticketing app microservices",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
-  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "tsc"
+    "clean": "del-cli dist/**",
+    "build": "npm run clean && tsc"
   },
   "dependencies": {
-    "fastify-plugin": "^5.0.0",
-    "jsonwebtoken": "^9.0.0",
-    "@fastify/cookie": "^11.0.0"
-  },
-  "peerDependencies": {
+    "@fastify/cookie": "^11.0.0",
     "@fastify/type-provider-zod": "^1.0.0",
-    "fastify": "^5.0.0"
+    "fastify": "^5.0.0",
+    "fastify-plugin": "^5.0.0",
+    "jsonwebtoken": "^9.0.0"
   },
   "devDependencies": {
-    "typescript": "^6.0.3",
+    "@types/jsonwebtoken": "^9.0.0",
     "@types/node": "^25.9.2",
-    "@types/jsonwebtoken": "^9.0.0"
+    "del-cli": "^7.0.0",
+    "typescript": "^6.0.3"
   }
 }

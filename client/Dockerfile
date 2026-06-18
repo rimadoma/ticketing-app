@@ -1,10 +1,9 @@
 FROM node:alpine
-WORKDIR /app/client
+WORKDIR /app
 
-COPY package.json ./
-COPY package-lock.json ./
-RUN npm ci
+COPY client/package.json client/package-lock.json ./client/
+RUN cd client && npm ci
 
-COPY . .
+COPY client/ ./client/
 
-CMD ["npm", "run", "dev"]
+CMD ["npm", "--prefix", "client", "run", "dev"]

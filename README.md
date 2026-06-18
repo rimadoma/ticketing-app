@@ -1,12 +1,12 @@
 # Ticketing App
 
+## How to build, deploy & dev
 
 ### Standalone locally
 
-Testing frontend (client/) standalone will be a major pain in the bum. I don't recommend it. Also, there are no config files, so you may need to change many hard-coded consts, e.g. cluster URL to localhost That being said, each service lives in its own directory. To run a service, e.g. auth:
+Testing frontend (client/) standalone will be a major pain in the bum. I don't recommend it. Also, there are no config files, so you may need to change many hard-coded consts, e.g. cluster URL to localhost That being said, each service lives in its own directory. The shared library (`common/`) is published to npm as [`@mahonen_consulting_zlc/common`](https://www.npmjs.com/package/@mahonen_consulting_zlc/common) and installed as a regular dependency. To run a service, e.g. auth:
 
 ```bash
-cd common && npm run build   # auth depends on @mahonen_consulting_zlc/common — build it first
 cd auth
 npm install
 npm run dev
@@ -26,19 +26,17 @@ For example on Windows: `set JWT_KEY=anysecretyouwant`.
 
 > **Note:** Auth cookies use `secure: 'auto'`, so they work over plain HTTP locally without any extra configuration.
 
-### Building Docker images manually
+### Manual Docker images
 
-`auth` must be built from the **repo root** because its Dockerfile references `common/`:
+All images are built from the repo root using `-f` to point at the service Dockerfile:
 
 ```bash
 docker build -t richdgo4/auth -f auth/Dockerfile .
 ```
 
-`client` can be built from its own directory. Use `Dockerfile.prod` for GCP (runs a compiled production build); use the default `Dockerfile` for local dev (runs `next dev`):
-
+Run with required env vars (see above), for example:
 ```bash
-cd client && docker build -t richdgo4/client .                          # local dev
-cd client && docker build -f Dockerfile.prod -t richdgo4/client .       # GCP / production
+docker run -e JWT_KEY=anysecretyouwant richdgo4/auth
 ```
 
 ### Kubernetes (w. Skaffold)
