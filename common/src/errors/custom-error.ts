@@ -58,3 +58,11 @@ export class UnauthorizedError extends CustomError {
         super('Unauthorized');
     }
 }
+
+export class ForbiddenError extends CustomError {
+    statusCode = 403;
+
+    constructor(message = 'Forbidden') {
+        super(message);
+    }
+}
