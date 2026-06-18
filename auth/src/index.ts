@@ -1,4 +1,4 @@
-import {  AppError } from '@mahonen_consulting_zlc/common';
+import { AppError, AppErrorIds } from '@mahonen_consulting_zlc/common';
 import mongoose from 'mongoose';
 import { createApp } from './app.js';
 
@@ -11,7 +11,7 @@ async function openDbConnection(): Promise<void> {
     try {
         await mongoose.connect(`mongodb://${_mongoURL}:${_mongoPort}/${_dbName}`);
     } catch (err) {
-        throw new AppError(err, 1233);
+        throw new AppError(err, AppErrorIds.DB_CONNECTION_ERROR);
     }
 }
 

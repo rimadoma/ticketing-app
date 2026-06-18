@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { type UserCredentials, userCredentialsSchema } from './user-credentials.js';
 import { UserModel } from '../models/user.js';
-import { AppError, BadRequestError, Jwt } from '@mahonen_consulting_zlc/common';
+import { AppError, AppErrorIds, BadRequestError, Jwt } from '@mahonen_consulting_zlc/common';
 
 export async function signupRoutes(fastify: FastifyInstance): Promise<void> {
     fastify.post<{ Body: UserCredentials }>('/api/users/signup', { schema: userCredentialsSchema },
@@ -24,7 +24,7 @@ async function isExistingUser(email: string): Promise<boolean> {
     try {
         return await UserModel.findOne({ email: email }) !== null;
     } catch (err) {
-        throw new AppError(err, 1234);
+        throw new AppError(err, AppErrorIds.DB_READ_ERROR);
     }
 }
 
@@ -32,6 +32,6 @@ async function createNewUser(email: string, password: string) {
     try {
         return await UserModel.create({ email, password });
     } catch (err) {
-        throw new AppError(err, 1235);
+        throw new AppError(err, AppErrorIds.DB_WRITE_ERROR);
     }
 }

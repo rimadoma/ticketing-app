@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { type UserCredentials, userCredentialsSchema } from './user-credentials.js';
 import { UserModel } from '../models/user.js';
-import { AppError, BadRequestError, Jwt } from '@mahonen_consulting_zlc/common';
+import { AppError, AppErrorIds, BadRequestError, Jwt } from '@mahonen_consulting_zlc/common';
 import bcrypt from 'bcrypt';
 
 const badCredentialsError = new BadRequestError('Login failed! Check your email or password');
@@ -32,6 +32,6 @@ async function queryUser(email: string) {
     try {
         return await UserModel.findOne({ email: email });
     } catch (err) {
-        throw new AppError(err, 1234);
+        throw new AppError(err, AppErrorIds.DB_READ_ERROR);
     }
 }
