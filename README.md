@@ -18,11 +18,16 @@ The service will be available at `http://localhost:<port>/<route>`, e.g. auth at
 
 Some services require environment variables that are normally injected by Kubernetes. Set these in your shell before running:
 
-| Variable  | Service | Description                  |
-|-----------|---------|------------------------------|
-| `JWT_KEY` | auth    | Secret used to sign JWTs — any string works locally |
+| Variable    | Description                                              |
+|-------------|----------------------------------------------------------|
+| `JWT_KEY`   | Secret used to sign/verify JWTs — any string works locally |
+| `MONGO_URI` | MongoDB connection string, e.g. `mongodb://localhost:27017/<service>` |
 
-For example on Windows: `set JWT_KEY=anysecretyouwant`.
+For example on Windows:
+```
+set JWT_KEY=anysecretyouwant
+set MONGO_URI=mongodb://localhost:27017/auth
+```
 
 > **Note:** Auth cookies use `secure: 'auto'`, so they work over plain HTTP locally without any extra configuration.
 

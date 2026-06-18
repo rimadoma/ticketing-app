@@ -4,7 +4,7 @@ Requirements for the auth mechanism:
 3. Must have a built-in, tamper-resistant way to expire or invalidate itself
 4. Must be easily understood between different langugages
     - Pretending that the different microservices might have different tech stacks
-5. Must not requires some kind of backing data store on the server
+5. Must not require any kind of backing data store on the server
 6. Has to work with a server side rendered Next.js frontend
 
 Decisions: 

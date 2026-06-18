@@ -16,7 +16,6 @@ export function testInfra() {
         await mongoose.connect(mongoUri, {});
 
         process.env.JWT_KEY = 'test-secret';
-        process.env.NODE_ENV = 'test';
         app = await createApp();
         await app.ready();
     });
