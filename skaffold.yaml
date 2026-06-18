@@ -24,7 +24,15 @@ build:
         manual:
           - src: "client/pages/**/*.js"
             dest: "."
-            
+    - image: richdgo4/tickets
+      context: .
+      docker:
+        dockerfile: tickets/Dockerfile
+      sync:
+        manual:
+          - src: "tickets/src/**/*.ts"
+            dest: "."
+
 # Expose MongoDB for easier local testing
 portForward:
   - resourceType: service
@@ -32,6 +40,11 @@ portForward:
     namespace: default
     port: 27017
     localPort: 27017
+  - resourceType: service
+    resourceName: tickets-mongo-service
+    namespace: default
+    port: 27017
+    localPort: 27018
 
 profiles:
   # Deploy to GCP
@@ -55,6 +68,14 @@ profiles:
           context: .
           docker:
             dockerfile: client/Dockerfile.prod
+        - image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/tickets
+          context: .
+          docker:
+            dockerfile: tickets/Dockerfile
+          sync:
+            manual:
+              - src: "tickets/src/**/*.ts"
+                dest: "."
         - image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/hedgehog-consultancy
           context: hedgehog-consultancy
           docker:

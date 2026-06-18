@@ -57,6 +57,8 @@ You can run the apps on a local cluster or deploy them to GCP — pick one of th
    ```bash
    kubectl create secret generic jwt-secret --from-literal=JWT_KEY=mysupersecretthingy
    ```
+> **Note:** MongoDB deployments in the local cluster have no PersistentVolumeClaims — data is stored in the container's ephemeral layer and lost when a pod restarts. This is intentional for local dev; the GCP manifests include PVCs.
+
 **Run:**
 ```bash
 skaffold dev
