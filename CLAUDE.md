@@ -11,7 +11,7 @@ A microservices ticketing app. Backend services are independently deployable Nod
 ```
 auth/               # Auth service (port 3000) — /api/users/*
 client/             # Next.js frontend (port 3000) — catch-all /
-common/             # Shared library (@ticketing/common) — published locally via file: reference
+common/             # Shared library (@mahonen_consulting_zlc/common) — published locally via file: reference
 infra/
   k8s/              # Local Kubernetes manifests
   k8s-gcp/          # GCP Kubernetes manifests
@@ -75,7 +75,7 @@ Skaffold syncs source files directly into running containers without a full imag
 
 ### Shared Library (`common/`)
 
-`@ticketing/common` is consumed by all services via a local `file:` npm reference. It exports:
+`@mahonen_consulting_zlc/common` is consumed by all services via a local `file:` npm reference. It exports:
 
 - **`CustomError`** — abstract base class all custom errors extend. Requires `statusCode` and `serializeErrors()`. The `errorHandler` registered on each Fastify instance handles any `CustomError` subclass polymorphically.
 - **`RequestValidationError`** (exported as `ValidationError`) — 400, carries field-level errors.
@@ -92,7 +92,7 @@ Next.js Pages Router app in plain JavaScript. Bootstrap CSS is imported globally
 
 Each service wires up Fastify in `src/index.ts`:
 - Registers Zod validator/serializer compilers (`@fastify/type-provider-zod`)
-- Registers `schemaErrorFormatter` and `errorHandler` from `@ticketing/common`
+- Registers `schemaErrorFormatter` and `errorHandler` from `@mahonen_consulting_zlc/common`
 - Registers route plugins
 
 Routes define Zod schemas inline or in a sibling `*-schema.ts` / `*-credentials.ts` file. The `Body` generic on route handlers is inferred from the Zod schema (`z.infer<typeof schema.body>`).

@@ -1,5 +1,5 @@
 {
-  "name": "@ticketing/common",
+  "name": "@mahonen_consulting_zlc/common",
   "version": "1.0.0",
   "description": "Shared library for ticketing app microservices",
   "type": "module",

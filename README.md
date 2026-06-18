@@ -6,7 +6,7 @@
 Testing frontend (client/) standalone will be a major pain in the bum. I don't recommend it. Also, there are no config files, so you may need to change many hard-coded consts, e.g. cluster URL to localhost That being said, each service lives in its own directory. To run a service, e.g. auth:
 
 ```bash
-cd common && npm run build   # auth depends on @ticketing/common — build it first
+cd common && npm run build   # auth depends on @mahonen_consulting_zlc/common — build it first
 cd auth
 npm install
 npm run dev

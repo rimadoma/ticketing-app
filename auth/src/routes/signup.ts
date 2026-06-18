@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { type UserCredentials, userCredentialsSchema } from './user-credentials.js';
 import { UserModel } from '../models/user.js';
-import { AppError, BadRequestError, Jwt } from '@ticketing/common';
+import { AppError, BadRequestError, Jwt } from '@mahonen_consulting_zlc/common';
 
 export async function signupRoutes(fastify: FastifyInstance): Promise<void> {
     fastify.post<{ Body: UserCredentials }>('/api/users/signup', { schema: userCredentialsSchema },

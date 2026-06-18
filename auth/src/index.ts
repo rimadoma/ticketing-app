@@ -1,4 +1,4 @@
-import {  AppError } from '@ticketing/common';
+import {  AppError } from '@mahonen_consulting_zlc/common';
 import mongoose from 'mongoose';
 import { createApp } from './app.js';
 
