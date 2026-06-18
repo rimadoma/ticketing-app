@@ -72,6 +72,17 @@ Skaffold syncs source files directly into running containers without a full imag
 
 After changing `common/src/`, always rebuild (`npm run build` in `common/`) before the changes are visible to services — services import from `common/dist/`.
 
+`AppErrorIds` in `common/src/errors/app-error-ids.ts` provides taxonomy constants for `AppError`'s `errorId` parameter. Always use these instead of raw numbers. Current taxonomy:
+
+| Constant | Value | Use for |
+|---|---|---|
+| `DB_CONNECTION_ERROR` | 1 | `mongoose.connect()` failure |
+| `DB_READ_ERROR` | 2 | `find` / `findOne` / `findById` failure |
+| `DB_WRITE_ERROR` | 3 | `create` / `save` / `update` failure |
+| `JWT_SIGN_ERROR` | 4 | `jwt.sign()` failure |
+
+If none of these fit, add a new constant to `app-error-ids.ts` rather than using a raw number.
+
 ### Frontend (`client/`)
 
 Next.js Pages Router app in plain JavaScript. Bootstrap CSS is imported globally in `pages/_app.js` — use Bootstrap classes for all styling rather than custom CSS.
