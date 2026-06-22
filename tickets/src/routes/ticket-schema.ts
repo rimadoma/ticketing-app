@@ -14,7 +14,7 @@ export type TicketBody = z.infer<typeof ticketBodySchema.body>;
 
 export const ticketParamsSchema = {
     params: z.object({
-        id: z.string().min(1),
+        id: z.hex().length(24),
     }),
 };
 

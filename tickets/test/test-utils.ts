@@ -1,12 +1,35 @@
 import { beforeAll, beforeEach, afterAll } from 'vitest';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
+import { faker } from '@faker-js/faker';
 import { createApp } from '../src/app.js';
 import type { FastifyInstance } from 'fastify/types/instance.js';
 import jwt from 'jsonwebtoken';
+import { TicketModel } from '../src/models/ticket.js';
 
 export let mongo: MongoMemoryServer;
 export let app: FastifyInstance;
+
+export async function createTickets(n: number, userId?: string): Promise<{ id: string; title: string }[]>;
+export async function createTickets(titles: string[], userId?: string): Promise<{ id: string; title: string }[]>;
+export async function createTickets(nOrTitles: number | string[], userId = 'JohnDoe'): Promise<{ id: string; title: string }[]> {
+    const titles = Array.isArray(nOrTitles)
+        ? nOrTitles
+        : Array.from({ length: nOrTitles }, () => faker.commerce.productName());
+
+    const docs = await TicketModel.insertMany(
+        titles.map(title => ({
+            title,
+            price: {
+                amount: mongoose.Types.Decimal128.fromString(faker.commerce.price({ min: 1, max: 999, dec: 2 })),
+                currency: faker.finance.currencyCode(),
+            },
+            userId,
+        }))
+    );
+
+    return docs.map(d => ({ id: d._id.toString(), title: d.title }));
+}
 
 export function createJwtCookie(userId = 'JohnDoe'): string[] {
     const payload = { id: userId, email: 'test@test.com' }

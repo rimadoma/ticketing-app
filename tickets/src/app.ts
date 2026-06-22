@@ -23,10 +23,10 @@ export async function createApp(): Promise<FastifyInstance> {
 
     instance.register(currentUserPlugin);
 
+    instance.register(getAllTicketsRoute);
+    instance.register(getOneTicketRoute);
     instance.register(async (protectedScope: FastifyInstance) => {
         await requireAuthPlugin(protectedScope);
-        protectedScope.register(getAllTicketsRoute);
-        protectedScope.register(getOneTicketRoute);
         protectedScope.register(createTicketRoute);
         protectedScope.register(updateTicketRoute);
     });
