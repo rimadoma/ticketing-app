@@ -18,7 +18,7 @@ class Price {
                     id: ret._id.toString(),
                     title: ret.title,
                     price: {
-                        amount: parseFloat(ret.price.amount.toString()),
+                        amount: ret.price.amount.toString(),
                         currency: ret.price.currency,
                     },
                     userId: ret.userId,

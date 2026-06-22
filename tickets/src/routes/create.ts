@@ -1,5 +1,4 @@
 import type { FastifyInstance } from 'fastify';
-import mongoose from 'mongoose';
 import { TicketModel } from '../models/ticket.js';
 import { AppError, AppErrorIds } from '@mahonen_consulting_zlc/common';
 import { type TicketBody, ticketBodySchema } from './ticket-schema.js';
@@ -13,7 +12,7 @@ export async function createTicketRoute(fastify: FastifyInstance): Promise<void>
                 ticket = await TicketModel.create({
                     title,
                     price: {
-                        amount: mongoose.Types.Decimal128.fromString(price.amount),
+                        amount: price.amount,
                         currency: price.currency,
                     },
                     userId: request.currentUser!.id,

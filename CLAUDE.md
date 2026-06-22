@@ -21,7 +21,7 @@ docker-compose.yml  # Alternative: run services directly with Docker
 
 ## Common Commands
 
-> **Sandbox note:** Do NOT run `npm` commands — they fail silently and corrupt `node_modules`/`package-lock.json`. Tell the user which package to install and let them run it with `! npm install <pkg>`.
+> **Sandbox note:** Do NOT run any `npm` or `node` commands — they fail and can corrupt /node_modules because you're in a sandbox. Tell the user which command to run and let them execute it with the `!` prefix (e.g. `! npm test`, `! npm install <pkg>`).
 
 Each service is developed independently. Run these from within the service directory:
 
