@@ -1,18 +1,12 @@
 import request from 'supertest';
 import { describe, it, expect } from 'vitest';
-import { app, testInfra } from './test-utils.js'
+import { app, testInfra } from './test-utils.js';
+import { UserModel } from '../src/models/user.js';
 
 testInfra();
 
 describe('POST /api/users/signup', () => {
-    it('returns 201 on successful signup', async () => {
-        await request(app.server)
-            .post('/api/users/signup')
-            .send({ email: 'test@test.com', password: 'password' })
-            .expect(201);
-    });
-
-    it('sets a cookie on successful signup', async () => {
+        it('sets a cookie on successful signup', async () => {
         const response = await request(app.server)
             .post('/api/users/signup')
             .send({ email: 'test@test.com', password: 'password' })
@@ -52,5 +46,20 @@ describe('POST /api/users/signup', () => {
             .post('/api/users/signup')
             .send({ password: 'validPassword' })
             .expect(400);
+    });
+
+    it('creates a user in the database when inputs are valid', async () => {
+        const usersBefore = await UserModel.countDocuments();
+
+        const response = await request(app.server)
+            .post('/api/users/signup')
+            .send({ email: 'test@test.com', password: 'password' })
+            .expect(201);
+
+        const usersNow = await UserModel.countDocuments();
+        expect(usersNow).toBe(usersBefore + 1);
+        const { id, email } = response.body;
+        expect(id).toBeDefined();
+        expect(email).toBe('test@test.com');
     });
 });

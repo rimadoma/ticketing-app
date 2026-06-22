@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { describe, it, expect } from 'vitest';
 import { app, createJwtCookie, testInfra } from '../test-utils.js';
+import { TicketModel } from '../../src/models/ticket.js';
 
 const _route = '/api/tickets';
 
@@ -56,7 +57,7 @@ describe('POST /api/tickets', () => {
         const response = await request(app.server)
             .post(_route)
             .set('Cookie', createJwtCookie())
-            .send({ title: 'Mähönen ZLC launch party', price: { amount: '36.99', currency } });
+            .send({ title: 'Mähönen ZLC launch party', price: {  amount: '36.99', currency } });
 
         expect(response.statusCode).toEqual(400);
     });
@@ -72,7 +73,9 @@ describe('POST /api/tickets', () => {
     });
 
     it('creates a ticket when inputs are valid', async () => {
-        const cookie = createJwtCookie('SomeBloke');
+        const authenticatedUder = 'SomeBloke';
+        const cookie = createJwtCookie(authenticatedUder);
+        const ticketsBefore = await TicketModel.countDocuments();
 
         const response = await request(app.server)
             .post(_route)
@@ -80,10 +83,10 @@ describe('POST /api/tickets', () => {
             .send({ title: 'Mähönen ZLC launch party', price: { amount: '36.99', currency: 'GBP' } })
             .expect(201);
 
-        console.log(response.body);
-
+        const ticketsNow = await TicketModel.countDocuments();
+        expect(ticketsNow).toBe(ticketsBefore + 1);
         const {userId, title,  price } = response.body;
-        expect(userId).toBe('SomeBloke');
+        expect(userId).toBe(authenticatedUder);
         expect(title).toBe('Mähönen ZLC launch party');
         expect(price.amount).toBe('36.99');
         expect(price.currency).toBe('GBP');
