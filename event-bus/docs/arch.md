@@ -22,9 +22,11 @@ RabbitMQ was chosen for its prevalence in real-world production systems, making 
 
 RabbitMQ runs as a Kubernetes Deployment with a ClusterIP Service in `infra/k8s/`. Services connect to it via the in-cluster DNS name.
 
+**PersistentVolumeClaim:** The current manifest has no PVC, so `/var/lib/rabbitmq` lives in ephemeral container storage. Durable queues and persistent messages survive a container restart within the same pod, but are lost when the pod is deleted and recreated (node failure, rolling update, manual delete). For production, add a PVC mounted at `/var/lib/rabbitmq`. For local dev with Skaffold this is tolerable — lost messages can be retried manually.
+
 ## Node.js Client
 
-Uses `amqp-connection-manager` (wraps `amqplib`) for automatic reconnection — important in Kubernetes where pods restart independently.
+Uses `amqplib` with TypeScript types via `@types/amqplib`. If reconnection handling becomes non-trivial, `amqp-connection-manager` is the standard wrapper to add on top.
 
 ## Key Concepts
 
@@ -33,18 +35,10 @@ Uses `amqp-connection-manager` (wraps `amqplib`) for automatic reconnection — 
 - **Durability:** queues and messages are durable — RabbitMQ persists them across broker restarts
 - **Acknowledgement:** consumers ack only after successful processing; unacked messages are requeued on crash
 
-## Known Gap: Event Replay
+## Event Replay
 
-RabbitMQ is queue-based — messages are removed once consumed. NATS Streaming is log-based and supports replaying from a start position (beginning of channel, specific sequence number, time delta, etc.). This gap surfaces when:
+RabbitMQ is queue-based — messages are removed once consumed. The current approach uses durable queues, which cover the primary operational need: if a service pod restarts, its durable queue holds unacked messages until the consumer reconnects (`amqp-connection-manager` handles reconnection automatically).
 
-- A new service instance starts and needs to catch up on past events
-- The course uses start positions to bootstrap subscriber state
+**Not covered:** a brand-new service instance that needs to replay history to build initial state (the start-position pattern from NATS Streaming). If that becomes necessary, the path forward is **RabbitMQ Streams** — native log semantics with offset-based replay, `rabbitmq_stream` plugin, and the `rabbitmq-stream-js-client` Node.js client. Redis as a second event store was considered and rejected as unnecessary overhead for this use case.
 
-**Options under consideration:**
-
-| Option | Trade-off |
-|---|---|
-| **RabbitMQ Streams** | Native log semantics with offset-based replay; requires `rabbitmq_stream` plugin and a different client (`rabbitmq-stream-js-client`). Steeper setup but keeps everything in one broker. |
-| **Redis event store** | Publish events to a Redis list/stream (`XADD`/`XREAD`) before (or after) RabbitMQ. Replay by reading from Redis. Adds a second storage dependency but Redis is already on the stack. |
-
-Decision pending — revisit when the course introduces start positions.
+The event-bus library abstracts the broker details, so a future switch to Streams would be contained to this library without touching service code.
