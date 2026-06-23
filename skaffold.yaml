@@ -33,7 +33,7 @@ build:
           - src: "tickets/src/**/*.ts"
             dest: "."
 
-# Expose MongoDB for easier local testing
+# Expose ports for easier local testing
 portForward:
   - resourceType: service
     resourceName: auth-mongo-service
@@ -45,6 +45,18 @@ portForward:
     namespace: default
     port: 27017
     localPort: 27018
+    # AMQP
+  - resourceType: service
+    resourceName: rabbitmq-service
+    namespace: default
+    port: 5672
+    localPort: 5672
+    # Management UI
+  - resourceType: service
+    resourceName: rabbitmq-service
+    namespace: default
+    port: 15672
+    localPort: 15672
 
 profiles:
   # Deploy to GCP

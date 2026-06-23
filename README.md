@@ -71,6 +71,8 @@ skaffold dev
 
 This builds all service images, deploys them to your local cluster, and watches for file changes — syncing `.ts` files directly into running containers without a full rebuild. The app will be available at `http://localhost`, e.g. `http://localhost/api/users/signup`.
 
+The RabbitMQ management UI is available at `http://localhost:15672` (default credentials: `guest` / `guest`). The AMQP port (5672) is also forwarded, so you can publish messages directly to `amqp://localhost:5672` without going through a service — useful for testing consumers in isolation. Postman supports AMQP if you want a GUI for this.
+
 #### Option 2: GCP cluster
 
 > **Note:** The cluster and project details below are from a free GCP trial and may no longer be active.

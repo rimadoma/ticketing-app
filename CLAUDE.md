@@ -12,6 +12,8 @@ A microservices ticketing app. Backend services are independently deployable Nod
 auth/               # Auth service (port 3000) — /api/users/*
 client/             # Next.js frontend (port 3000) — catch-all /
 common/             # Shared library (@mahonen_consulting_zlc/common) — published to npm
+event-bus/          # Shared RabbitMQ event-bus library — consumed by all backend services
+  docs/arch.md      # Architecture decision record
 infra/
   k8s/              # Local Kubernetes manifests
   k8s-gcp/          # GCP Kubernetes manifests
@@ -65,6 +67,16 @@ Skaffold syncs source files directly into running containers without a full imag
 > **Claude Code note:** Claude's file edits also bypass inotify (same mechanism as `kubectl cp`), so Skaffold won't pick them up automatically. After Claude edits a watched file, make a dummy edit (e.g. add/remove a space) to trigger the sync.
 
 ## Architecture
+
+### Event Bus (`event-bus/`)
+
+A shared Node.js/TypeScript library consumed by all backend microservices for event-driven communication. Encapsulates the RabbitMQ connection, channel management, publisher, and subscriber — services never use `amqplib` directly.
+
+**Broker:** RabbitMQ, running as a Kubernetes Deployment + ClusterIP Service in `infra/k8s/`.  
+**Client:** `amqp-connection-manager` (auto-reconnect wrapper over `amqplib`).  
+**Pattern:** topic exchange — events are routed by type (e.g. `ticket.created`). Each subscribing service binds a durable queue. Messages and queues are durable; consumers ack only after successful processing.
+
+See `event-bus/docs/arch.md` for the full architecture decision record.
 
 ### Shared Library (`common/`)
 
