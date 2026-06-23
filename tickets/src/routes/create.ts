@@ -20,6 +20,10 @@ export async function createTicketRoute(fastify: FastifyInstance): Promise<void>
             } catch (err) {
                 throw new AppError(err, AppErrorIds.DB_WRITE_ERROR);
             }
+
+            // const ticketEvent = { ...ticket!, version: 1 };
+
+
             return reply.code(201).send(ticket);
         });
 }

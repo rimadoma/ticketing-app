@@ -16,7 +16,7 @@ RabbitMQ was chosen for its prevalence in real-world production systems, making 
 
 ## Role in the Architecture
 
-`event-bus` is a **shared Node.js/TypeScript library** (analogous to `common/`) consumed by all backend microservices. It encapsulates the RabbitMQ connection, channel management, publisher, and subscriber so individual services never deal with `amqplib` directly.
+`event-bus` is a **shared Node.js/TypeScript library code** within `common/` consumed by all backend microservices. It encapsulates the RabbitMQ connection, channel management, publisher, and subscriber so individual services never deal with `amqplib` directly.
 
 ## Infrastructure
 

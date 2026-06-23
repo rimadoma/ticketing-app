@@ -3,6 +3,12 @@ import mongoose from 'mongoose';
 import { createApp } from './app.js';
 
 const _port = 3002;
+const exchange = 'tickets';
+const routes = ['delta'];
+
+async function connectEventBus() : Promise<void> {
+
+}
 
 async function openDbConnection(): Promise<void> {
     try {
@@ -22,5 +28,6 @@ if (!process.env.MONGO_URI) {
 
 const app = await createApp();
 await openDbConnection();
+
 await app.listen({ port: _port, host: "0.0.0.0" });
 console.log(`Listening on ${_port}`)

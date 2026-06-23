@@ -14,7 +14,7 @@ function readJsonFile(path: string): string {
 }
 
 // Read config & data
-const [,, exchange = 'tickets', routingKeySuffix = 'upsert', file = 'src/test-scripts/ticket.json'] = process.argv;
+const [,, exchange = 'tickets', routingKeySuffix = 'upsert', file = 'src/event-bus/test-scripts/ticket.json'] = process.argv;
 const routingKey = `${exchange}.${routingKeySuffix}`;
 const queue = `${routingKey}.queue`;
 const data: string = readJsonFile(resolve(process.cwd(), file));
@@ -29,7 +29,7 @@ await channel.assertQueue(queue, { durable: true });
 // Bind durable queue to the exhange / routingKey to ensure msg persistence
 await channel.bindQueue(queue, exchange, routingKey);
 
-// Send
+// Persist messages to storage in case RabbitMQ goes down (only works with durable queues)
 channel.publish(exchange, routingKey, Buffer.from(data), { persistent: true });
 
 // Teardown

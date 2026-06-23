@@ -11,22 +11,28 @@ await channel.assertExchange(exchange, 'topic', { durable: true });
 await channel.assertQueue(queue, { durable: true });
 await channel.bindQueue(queue, exchange, routingKey);
 
+async function shutDown(): Promise<void> {
+        await channel.close();
+        await connection.close();
+        console.log('Byesies');
+        process.exit(0);
+}
+
 async function receiveLoop(): Promise<void> {
     console.log("Commencing consuming...")
     await channel.consume(
         queue,
         (message) => {
-            if (message) { console.log(`Got message:\n${message.content.toString()}`); }
+            if (message) {
+                console.log(`Got message:\n${message.content.toString()}`);
+            }
             else console.warn('Consumer cancelled');
         },
         { noAck: true },
     );
 
-    process.once('SIGINT', async () => {
-        await channel.close();
-        await connection.close();
-        console.log('Byesies');
-    });
+    process.once('SIGINT', () => shutDown());
+    process.once('SIGTERM', () => shutDown());
 };
 
 receiveLoop();

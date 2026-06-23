@@ -141,3 +141,15 @@ skaffold run -p gcp
 This builds service images locally, pushes them to Artifact Registry, and deploys them to your GKE cluster. Unlike `skaffold dev`, it is a one-shot deploy with no file watching. Run `kubectl get ingress` to get the IP address for the app in GCP.
 
 The app will be available at your ingress IP, e.g. `http://35.228.198.217/api/hedgehog/consult`
+```
+                                     \ / \/ \/ / ,
+                                   \ /  \/ \/  \/  / ,
+                                 \ \ \/ \/ \/ \ \/ \/ /
+                               .\  \/  \/ \/ \/  \/ / / /
+                              '  / / \/  \/ \/ \/  \/ \ \/ \
+                           .'     ) \/ \/ \/ \/  \/  \/ \ / \
+                          /   o    ) \/ \/ \/ \/ \/ \/ \// /
+                        o'_ ',__ .'   ,.,.,.,.,.,.,.,'- '/
+                                 // \\          // \\ 
+                                ''  ''         ''  ''
+```
