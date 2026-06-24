@@ -6,6 +6,7 @@ import { resolve } from 'path';
 function readJsonFile(path: string): string {
     try {
         const content = readFileSync(path, 'utf-8');
+        // Validate JSON by attempting to parse it
         JSON.parse(content);
         return content;
     } catch {

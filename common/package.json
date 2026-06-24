@@ -9,8 +9,10 @@
     "dist"
   ],
   "scripts": {
+    "build": "npm run clean && tsc",
     "clean": "del-cli dist/**",
-    "build": "npm run clean && tsc"
+    "send": "node ./dist/event-bus/test-scripts/send.js",
+    "receive": "node ./dist/event-bus/test-scripts/receive.js"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.0",
