@@ -1,4 +1,3 @@
-import { connect } from 'amqp-connection-manager';
 import type { AmqpConnectionManager, ChannelWrapper } from 'amqp-connection-manager';
 import type amqp from 'amqplib';
 import { z } from 'zod';
@@ -7,20 +6,18 @@ import { AppErrorIds } from '../errors/app-error-ids.js';
 import type Event from './events/event.js';
 
 export default abstract class Publisher<T extends Event<z.ZodType>> {
-    private connection: AmqpConnectionManager | null = null;
     private channel: ChannelWrapper | null = null;
     private exchangeName: string | null = null;
     protected abstract route: T['route'];
 
-    async connect(): Promise<void> {
+    async connect(connection: AmqpConnectionManager): Promise<void> {
         try {
             const routingKey = this.route.toString();
             this.exchangeName = routingKey.substring(0, routingKey.indexOf('.'));
             const exchangeName = this.exchangeName;
             const queueName = `${routingKey}.queue`;
 
-            this.connection = connect(process.env.RABBITMQ_URL ?? 'amqp://rabbitmq-service');
-            this.channel = this.connection.createChannel({
+            this.channel = connection.createChannel({
                 setup: async (channel: amqp.ConfirmChannel) => {
                     await channel.assertExchange(exchangeName, 'topic', { durable: true });
                     await channel.assertQueue(queueName, { durable: true });
@@ -44,6 +41,5 @@ export default abstract class Publisher<T extends Event<z.ZodType>> {
 
     async close(): Promise<void> {
         await this.channel?.close();
-        await this.connection?.close();
     }
 }
