@@ -1,9 +1,10 @@
 import amqp from 'amqplib';
+import { z } from 'zod';
 import { AppError } from '../errors/custom-error.js';
 import { AppErrorIds } from '../errors/app-error-ids.js';
-import type Event from './event.js';
+import type Event from './events/event.js';
 
-export default abstract class Publisher<T extends Event> {
+export default abstract class Publisher<T extends Event<z.ZodType>> {
     private connection: amqp.ChannelModel | null = null;
     private channel: amqp.Channel | null = null;
     protected abstract route: T['route'];
@@ -11,7 +12,7 @@ export default abstract class Publisher<T extends Event> {
 
     async connect() {
         try {
-            this.connection = await amqp.connect('amqp://rabbitmq-service');
+            this.connection = await amqp.connect(process.env.RABBITMQ_URL ?? 'amqp://rabbitmq-service');
             this.channel = await this.connection.createChannel();
             const routingKey = this.route.toString();
             this.exchangeName = routingKey.substring(0, routingKey.indexOf('.'));
@@ -30,7 +31,9 @@ export default abstract class Publisher<T extends Event> {
             throw new Error("Can't publish without a channel or exchange");
         }
 
-        this.channel.publish(this.exchangeName, this.route.toString(), Buffer.from(JSON.stringify(data)), { persistent: true });
+        const serializedData = Buffer.from(JSON.stringify(data));
+        this.channel.publish(this.exchangeName, this.route.toString(), serializedData,
+            { persistent: true });
     }
 
     async close(): Promise<void> {

@@ -4,3 +4,8 @@ export { AppErrorIds } from './errors/app-error-ids.js';
 export { currentUserPlugin } from './middleware/current-user.js';
 export { requireAuthPlugin } from './middleware/require-auth.js';
 export { Jwt } from './utils/jwt.js';
+export { default as Publisher } from './event-bus/publisher.js';
+export { default as Listener } from './event-bus/listener.js';
+export { Routes } from './event-bus/routes.js';
+export type { default as Event } from './event-bus/events/event.js';
+export { ticketUpsertSchema as ticketSchema, type TicketCreatedEvent } from './event-bus/events/ticket-created-event.js';

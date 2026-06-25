@@ -1,19 +1,19 @@
 import amqp from 'amqplib';
+import { z, type ZodType } from 'zod';
 import { AppError } from '../errors/custom-error.js';
-import { AppErrorIds } from '../errors/app-error-ids.js';
-import { Routes } from './routes.js';
-import type Event from './event.js';
-import type { TicketCreatedEvent } from './ticket-created-event.js';
+import { AppErrorIds } from '../errors/app-error-ids.js';;
+import type Event from './events/event.js';
 
-export default abstract class Listener<T extends Event> {
+export default abstract class Listener<T extends Event<z.ZodType>> {
     private connection: amqp.ChannelModel | null = null;
     private channel: amqp.Channel | null = null;
     protected abstract route: T['route'];
+    protected abstract schema: ZodType<T['data']>;
     private queueName: string | null = null;
 
     async connect() {
         try {
-            this.connection = await amqp.connect('amqp://rabbitmq-service');
+            this.connection = await amqp.connect(process.env.RABBITMQ_URL ?? 'amqp://rabbitmq-service');
             this.channel = await this.connection.createChannel();
             const routingKey = this.route.toString();
             const exchangeName = routingKey.substring(0, routingKey.indexOf('.'));
@@ -46,9 +46,9 @@ export default abstract class Listener<T extends Event> {
         );
     }
 
-    private parseMessage(message: amqp.ConsumeMessage): unknown {
+    private parseMessage(message: amqp.ConsumeMessage): T['data'] {
         const contents = message.content;
-        return JSON.parse(contents.toString('utf-8'));
+        return this.schema.parse(JSON.parse(contents.toString('utf-8')));
     }
 
     protected abstract onMessage(data: T['data'], msg: amqp.ConsumeMessage): Promise<void>
@@ -62,13 +62,4 @@ export default abstract class Listener<T extends Event> {
             await this.connection.close();
         }
     }
-}
-
-class TicketCreatedListener extends Listener<TicketCreatedEvent> {
-    protected readonly route: Routes.TICKET_CREATED = Routes.TICKET_CREATED;
-
-    protected onMessage(data: TicketCreatedEvent['data'], msg: amqp.ConsumeMessage): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
-
 }
