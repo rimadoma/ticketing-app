@@ -12,13 +12,16 @@ export function schemaErrorFormatter(errors: FastifySchemaValidationError[], _da
 export function errorHandler(error: Error, _request: FastifyRequest, reply: FastifyReply): void {
     let customError: CustomError;
 
-    if (!(error instanceof CustomError)) {
-        customError = new AppError(error, 9999);
-    } else {
+    if (error instanceof CustomError) {
         customError = error;
+    } else if ((error as Error & { statusCode?: number }).statusCode === 400) {
+        // Fastify body-parse errors (invalid JSON syntax, wrong content-type, etc.)
+        customError = new BadRequestError(error.message);
+    } else {
+        customError = new AppError(error, 9999);
     }
 
-    if (error instanceof AppError || error instanceof BadRequestError) {
+    if (customError instanceof AppError || customError instanceof BadRequestError) {
         console.error(error.message);
     }
 

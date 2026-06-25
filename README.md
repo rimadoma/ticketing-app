@@ -18,10 +18,11 @@ The service will be available at `http://localhost:<port>/<route>`, e.g. auth at
 
 Some services require environment variables that are normally injected by Kubernetes. Set these in your shell before running:
 
-| Variable    | Description                                              |
-|-------------|----------------------------------------------------------|
-| `JWT_KEY`   | Secret used to sign/verify JWTs — any string works locally |
-| `MONGO_URI` | MongoDB connection string, e.g. `mongodb://localhost:27017/<service>` |
+| Variable       | Description                                              |
+|----------------|----------------------------------------------------------|
+| `JWT_KEY`      | Secret used to sign/verify JWTs — any string works locally |
+| `MONGO_URI`    | MongoDB connection string, e.g. `mongodb://localhost:27017/<service>` |
+| `RABBITMQ_URL` | RabbitMQ connection string, e.g.`amqp://localhost:5672`  |
 
 For example on Windows:
 ```

@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, afterAll } from 'vitest';
+import { beforeAll, beforeEach, afterAll, vi } from 'vitest';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
 import { faker } from '@faker-js/faker';
@@ -6,6 +6,8 @@ import { createApp } from '../src/app.js';
 import type { FastifyInstance } from 'fastify/types/instance.js';
 import jwt from 'jsonwebtoken';
 import { TicketModel } from '../src/models/ticket.js';
+import { ticketCreatedPublisher } from '../src/event-bus/ticket-created-publisher.js';
+import { ticketUpdatedPublisher } from '../src/event-bus/ticket-updated-publisher.js';
 
 export let mongo: MongoMemoryServer;
 export let app: FastifyInstance;
@@ -42,6 +44,9 @@ export function createJwtCookie(userId = 'JohnDoe'): string[] {
 
 export function testInfra() {
     beforeAll(async () => {
+        vi.spyOn(ticketCreatedPublisher, 'publish').mockResolvedValue(undefined);
+        vi.spyOn(ticketUpdatedPublisher, 'publish').mockResolvedValue(undefined);
+
         mongo = await MongoMemoryServer.create();
         const mongoUri = mongo.getUri();
 
@@ -53,6 +58,8 @@ export function testInfra() {
     });
 
     beforeEach(async () => {
+        vi.clearAllMocks();
+
         if (mongoose.connection.db) {
             const collections = await mongoose.connection.db.collections();
             for (const collection of collections) {

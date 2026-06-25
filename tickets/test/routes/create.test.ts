@@ -2,6 +2,7 @@ import request from 'supertest';
 import { describe, it, expect } from 'vitest';
 import { app, createJwtCookie, testInfra } from '../test-utils.js';
 import { TicketModel } from '../../src/models/ticket.js';
+import { ticketCreatedPublisher } from '../../src/event-bus/ticket-created-publisher.js';
 
 const _route = '/api/tickets';
 
@@ -90,5 +91,13 @@ describe('POST /api/tickets', () => {
         expect(title).toBe('Mähönen ZLC launch party');
         expect(price.amount).toBe('36.99');
         expect(price.currency).toBe('GBP');
+
+        expect(ticketCreatedPublisher.publish).toHaveBeenCalledOnce();
+        expect(ticketCreatedPublisher.publish).toHaveBeenCalledWith({
+            _id: response.body.id,
+            title: 'Mähönen ZLC launch party',
+            price: { amount: '36.99', currency: 'GBP' },
+            userId: authenticatedUder,
+        });
     });
 });

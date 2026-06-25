@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { describe, it, expect } from 'vitest';
 import { app, createJwtCookie, createTickets, testInfra } from '../test-utils.js';
+import { ticketUpdatedPublisher } from '../../src/event-bus/ticket-updated-publisher.js';
 
 const _route = '/api/tickets';
 
@@ -98,5 +99,13 @@ describe('PUT /api/tickets/:id', () => {
         expect(response.statusCode).toEqual(200);
         const { title } = response.body;
         expect(title).toBe('Mähönen ZLC pyjama party');
+
+        expect(ticketUpdatedPublisher.publish).toHaveBeenCalledOnce();
+        expect(ticketUpdatedPublisher.publish).toHaveBeenCalledWith({
+            _id: ticket!.id,
+            title: 'Mähönen ZLC pyjama party',
+            price: { amount: '36.99', currency: 'GBP' },
+            userId: 'SomeBloke',
+        });
     });
 });
