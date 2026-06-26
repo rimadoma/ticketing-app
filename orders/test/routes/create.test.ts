@@ -5,6 +5,7 @@ import { faker } from '@faker-js/faker';
 import { app, createJwtCookie, testInfra } from '../test-utils.js';
 import { OrderModel, OrderStatus } from '../../src/models/order.js';
 import { TicketModel } from '../../src/models/ticket.js';
+import { orderCreatedPublisher } from '../../src/event-bus/order-created-publisher.js';
 
 const _route = '/api/orders';
 
@@ -101,5 +102,18 @@ describe('POST /api/orders', () => {
         const expiresAt = new Date(response.body.expiresAt).getTime();
         expect(expiresAt).toBeGreaterThanOrEqual(before + 15 * 60 * 1000);
         expect(expiresAt).toBeLessThanOrEqual(Date.now() + 15 * 60 * 1000);
+
+        expect(orderCreatedPublisher.publish).toHaveBeenCalledOnce();
+        expect(orderCreatedPublisher.publish).toHaveBeenCalledWith({
+            id: response.body.id,
+            userId,
+            status: OrderStatus.Created,
+            ticket: {
+                id: ticket._id.toString(),
+                price: { amount: '10.00', currency: 'EUR' },
+            },
+            expiresAt: expect.any(String),
+            version: 1,
+        });
     });
 });

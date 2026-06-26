@@ -14,6 +14,7 @@ class Price {
 
 @modelOptions({
     schemaOptions: {
+        versionKey: false,
         toJSON: {
             transform(_doc, ret) {
                 return {

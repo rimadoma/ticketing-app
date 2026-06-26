@@ -3,6 +3,7 @@ import { OrderModel, OrderStatus } from '../models/order.js';
 import { TicketModel } from '../models/ticket.js';
 import { AppError, AppErrorIds, BadRequestError, NotFoundError } from '@mahonen_consulting_zlc/common';
 import { type OrderBody, orderBodySchema } from './order-schema.js';
+import { orderCreatedPublisher } from '../event-bus/order-created-publisher.js';
 
 const EXPIRY_MS = 15 * 60 * 1000;
 
@@ -19,6 +20,7 @@ export async function createOrderRoute(fastify: FastifyInstance): Promise<void> 
             if (!ticket) {
                 throw new NotFoundError();
             } else if (await ticket.isReserved()) {
+                // Also checks whether the user themselves has already reserved the ticket
                 throw new BadRequestError("The ticket is already reserved");
             }
 
@@ -34,6 +36,27 @@ export async function createOrderRoute(fastify: FastifyInstance): Promise<void> 
             } catch (err) {
                 throw new AppError(err, AppErrorIds.DB_WRITE_ERROR);
             }
+
+            try {
+                await orderCreatedPublisher.publish({
+                    id: order._id.toString(),
+                    userId: order.userId,
+                    status: OrderStatus.Created,
+                    ticket: {
+                        id: ticket._id.toString(),
+                        price: {
+                            amount: ticket.price.amount.toString(),
+                            currency: ticket.price.currency,
+                        },
+                    },
+                    expiresAt: order.expiresAt.toISOString(),
+                    version: order.version,
+                });
+            } catch (err) {
+                // TODO: outbox pattern — event may be lost on publish failure
+                console.error('Failed to publish order.created event', err);
+            }
+
             return reply.code(201).send(order);
         });
 }

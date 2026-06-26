@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { prop, getModelForClass, modelOptions, type Ref } from '@typegoose/typegoose';
 import { OrderStatus } from '@mahonen_consulting_zlc/common';
 export { OrderStatus };
@@ -5,6 +6,7 @@ import { Ticket } from './ticket.js';
 
 @modelOptions({
     schemaOptions: {
+        versionKey: false,
         toJSON: {
             transform(_doc, ret) {
                 return {
@@ -13,6 +15,7 @@ import { Ticket } from './ticket.js';
                     status: ret.status,
                     ticket: ret.ticket,
                     expiresAt: ret.expiresAt,
+                    version: ret.version,
                 };
             }
         }
@@ -30,6 +33,9 @@ export class Order {
 
     @prop({ type: () => Date, required: true })
     public expiresAt!: Date;
+
+    @prop({ type: () => mongoose.Schema.Types.Int32, required: true, default: 1 })
+    public version!: number;
 }
 
 export const OrderModel = getModelForClass(Order);

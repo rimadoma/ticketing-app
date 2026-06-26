@@ -106,6 +106,7 @@ describe('PUT /api/tickets/:id', () => {
             title: 'Mähönen ZLC pyjama party',
             price: { amount: '36.99', currency: 'GBP' },
             userId: 'SomeBloke',
+            version: 2,
         });
     });
 });

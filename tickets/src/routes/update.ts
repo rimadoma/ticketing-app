@@ -29,6 +29,7 @@ export async function updateTicketRoute(fastify: FastifyInstance): Promise<void>
             ticket.price.amount = mongoose.Types.Decimal128.fromString(price.amount);
             ticket.price.currency = price.currency;
             ticket.markModified('price');
+            ticket.version = ticket.version + 1;
             try {
                 await ticket.save();
             } catch (err) {
@@ -38,13 +39,14 @@ export async function updateTicketRoute(fastify: FastifyInstance): Promise<void>
             // Publish event
             try {
                 await ticketUpdatedPublisher.publish({
-                    _id: ticket.id,
+                    id: ticket.id,
                     title: ticket.title,
                     price: {
                         amount: ticket.price.amount.toString(),
                         currency: ticket.price.currency,
                     },
                     userId: ticket.userId,
+                    version: ticket.version,
                 });
             } catch (err) {
                 // TODO: outbox pattern — event may be lost on publish failure

@@ -12,6 +12,7 @@ class Price {
 
 @modelOptions({
     schemaOptions: {
+        versionKey: false,
         toJSON: {
             transform(_doc, ret) {
                 return {
@@ -22,6 +23,7 @@ class Price {
                         currency: ret.price.currency,
                     },
                     userId: ret.userId,
+                    version: ret.version,
                 };
             }
         }
@@ -36,6 +38,9 @@ export class Ticket {
 
     @prop({ type: () => String, required: true })
     public userId!: string;
+
+    @prop({ type: () => Number, required: true, default: 1 })
+    public version!: number;
 }
 
 export const TicketModel = getModelForClass(Ticket);

@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, afterAll } from 'vitest';
+import { beforeAll, beforeEach, afterAll, vi } from 'vitest';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
 import { faker } from '@faker-js/faker';
@@ -8,6 +8,8 @@ import jwt from 'jsonwebtoken';
 import { OrderModel } from '../src/models/order.js';
 import { TicketModel } from '../src/models/ticket.js';
 import { OrderStatus } from '@mahonen_consulting_zlc/common';
+import { orderCreatedPublisher } from '../src/event-bus/order-created-publisher.js';
+import { orderCancelledPublisher } from '../src/event-bus/order-cancelled-publisher.js';
 
 export let mongo: MongoMemoryServer;
 export let app: FastifyInstance;
@@ -34,6 +36,7 @@ export async function createOrders(n: number, userId?: string): Promise<{ id: st
             status: OrderStatus.Created,
             ticket: ticket._id,
             expiresAt,
+            version: 1,
         });
         results.push({
             id: order._id.toString(),
@@ -57,6 +60,9 @@ export function createJwtCookie(userId = 'JohnDoe'): string[] {
 
 export function testInfra() {
     beforeAll(async () => {
+        vi.spyOn(orderCreatedPublisher, 'publish').mockResolvedValue(undefined);
+        vi.spyOn(orderCancelledPublisher, 'publish').mockResolvedValue(undefined);
+
         mongo = await MongoMemoryServer.create();
         const mongoUri = mongo.getUri();
 
@@ -68,6 +74,8 @@ export function testInfra() {
     });
 
     beforeEach(async () => {
+        vi.clearAllMocks();
+
         if (mongoose.connection.db) {
             const collections = await mongoose.connection.db.collections();
             for (const collection of collections) {

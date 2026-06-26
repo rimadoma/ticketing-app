@@ -1,6 +1,8 @@
 import { AppError, AppErrorIds, EventBus } from '@mahonen_consulting_zlc/common';
 import mongoose from 'mongoose';
 import { createApp } from './app.js';
+import { ticketCreatedListener } from './event-bus/ticket-created-listener.js';
+import { ticketUpdatedListener } from './event-bus/ticket-updated-listener.js';
 
 const ENV_VARS = ['JWT_KEY', 'MONGO_URI'];
 for (const key of ENV_VARS) {
@@ -20,7 +22,9 @@ async function openDbConnection(): Promise<void> {
 }
 
 async function setupEventBus(): Promise<EventBus> {
-    return EventBus.create();
+    const eventBus = await EventBus.create();
+    await eventBus.addListeners(ticketCreatedListener, ticketUpdatedListener);
+    return eventBus;
 }
 
 async function shutdown(): Promise<void> {

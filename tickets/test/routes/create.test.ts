@@ -98,6 +98,7 @@ describe('POST /api/tickets', () => {
             title: 'Mähönen ZLC launch party',
             price: { amount: '36.99', currency: 'GBP' },
             userId: authenticatedUder,
+            version: 1,
         });
     });
 });

@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import mongoose from 'mongoose';
 import { app, createJwtCookie, createOrders, testInfra } from '../test-utils.js';
 import { OrderModel, OrderStatus } from '../../src/models/order.js';
+import { orderCancelledPublisher } from '../../src/event-bus/order-cancelled-publisher.js';
 
 const route = (id: string) => `/api/orders/${id}`;
 
@@ -58,5 +59,22 @@ describe('DELETE /api/orders/:id', () => {
         expect(response.body.status).toBe(OrderStatus.Cancelled);
         const order = await OrderModel.findById(orders[0]!.id);
         expect(order!.status).toBe(OrderStatus.Cancelled);
+        expect(order!.version).toBe(2);
+
+        expect(orderCancelledPublisher.publish).toHaveBeenCalledOnce();
+        expect(orderCancelledPublisher.publish).toHaveBeenCalledWith({
+            id: orders[0]!.id,
+            userId,
+            status: OrderStatus.Cancelled,
+            ticket: {
+                id: orders[0]!.ticket.id,
+                price: {
+                    amount: orders[0]!.ticket.price.amount,
+                    currency: orders[0]!.ticket.price.currency,
+                },
+            },
+            expiresAt: expect.any(String),
+            version: 2,
+        });
     });
 });

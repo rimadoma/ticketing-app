@@ -95,6 +95,10 @@ After changing `common/src/`, always rebuild (`npm run build` in `common/`) befo
 
 If none of these fit, add a new constant to `app-error-ids.ts` rather than using a raw number.
 
+### Event versioning
+
+Every event payload must include a `version: z.int32().min(1)` field (defined in `ticketSchema` in `common/src/event-bus/schemas/ticket.ts`). Versions start at **1** and increment by 1 with each update. Services use this for optimistic concurrency: a listener rejects (nacks and requeues) any event whose version is not exactly `currentVersion + 1`.
+
 ### Frontend (`client/`)
 
 Next.js Pages Router app in plain JavaScript. Bootstrap CSS is imported globally in `pages/_app.js` — use Bootstrap classes for all styling rather than custom CSS.
