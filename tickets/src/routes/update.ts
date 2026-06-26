@@ -4,7 +4,6 @@ import { TicketModel } from '../models/ticket.js';
 import { AppError, AppErrorIds, NotFoundError, ForbiddenError } from '@mahonen_consulting_zlc/common';
 import { type TicketBody, type TicketParams, ticketBodySchema, ticketParamsSchema } from './ticket-schema.js';
 import { ticketUpdatedPublisher } from '../event-bus/ticket-updated-publisher.js';
-import { toTicketPayload } from '../event-bus/ticket-payload.js';
 
 export async function updateTicketRoute(fastify: FastifyInstance): Promise<void> {
     fastify.put<{ Params: TicketParams; Body: TicketBody }>('/api/tickets/:id',
@@ -38,7 +37,15 @@ export async function updateTicketRoute(fastify: FastifyInstance): Promise<void>
 
             // Publish event
             try {
-                await ticketUpdatedPublisher.publish(toTicketPayload(ticket));
+                await ticketUpdatedPublisher.publish({
+                    _id: ticket.id,
+                    title: ticket.title,
+                    price: {
+                        amount: ticket.price.amount.toString(),
+                        currency: ticket.price.currency,
+                    },
+                    userId: ticket.userId,
+                });
             } catch (err) {
                 // TODO: outbox pattern — event may be lost on publish failure
                 console.error('Failed to publish ticket.updated event', err);
