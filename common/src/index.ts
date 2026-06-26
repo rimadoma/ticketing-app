@@ -12,3 +12,4 @@ export type { default as Event } from './event-bus/events/event.js';
 export type { ticketSchema } from './event-bus/schemas/ticket.js'
 export type { TicketCreatedEvent } from './event-bus/events/ticket-created-event.js';
 export type { TicketUpdatedEvent } from './event-bus/events/ticket-updated-event.js';
+export { OrderStatus } from './event-bus/types/order-status.js';
