@@ -1,10 +1,7 @@
-import { prop, getModelForClass, modelOptions } from '@typegoose/typegoose';
-
-export enum OrderStatus {
-    Pending = 'pending',
-    Paid = 'paid',
-    Expired = 'expired'
-}
+import { prop, getModelForClass, modelOptions, type Ref } from '@typegoose/typegoose';
+import { OrderStatus } from '@mahonen_consulting_zlc/common';
+export { OrderStatus };
+import { Ticket } from './ticket.js';
 
 @modelOptions({
     schemaOptions: {
@@ -14,7 +11,7 @@ export enum OrderStatus {
                     id: ret._id.toString(),
                     userId: ret.userId,
                     status: ret.status,
-                    ticketId: ret.ticketId,
+                    ticket: ret.ticket,
                     expiresAt: ret.expiresAt,
                 };
             }
@@ -25,11 +22,11 @@ export class Order {
     @prop({ type: () => String, required: true })
     public userId!: string;
 
-    @prop({ type: () => String, enum: OrderStatus, required: true, default: OrderStatus.Pending })
+    @prop({ type: () => String, enum: OrderStatus, required: true, default: OrderStatus.Created })
     public status!: OrderStatus;
 
-    @prop({ type: () => String, required: true })
-    public ticketId!: string;
+    @prop({ ref: () => Ticket, required: true })
+    public ticket!: Ref<Ticket>;
 
     @prop({ type: () => Date, required: true })
     public expiresAt!: Date;

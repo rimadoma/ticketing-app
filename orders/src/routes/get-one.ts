@@ -8,7 +8,7 @@ export async function getOneOrderRoute(fastify: FastifyInstance): Promise<void> 
         async (request, reply) => {
             let order;
             try {
-                order = await OrderModel.findOne({ _id: request.params.id, userId: request.currentUser!.id });
+                order = await OrderModel.findOne({ _id: request.params.id, userId: request.currentUser!.id }).populate('ticket');
             } catch (err) {
                 throw new AppError(err, AppErrorIds.DB_READ_ERROR);
             }

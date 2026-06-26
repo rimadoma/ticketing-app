@@ -5,23 +5,48 @@ import { faker } from '@faker-js/faker';
 import { createApp } from '../src/app.js';
 import type { FastifyInstance } from 'fastify/types/instance.js';
 import jwt from 'jsonwebtoken';
-import { OrderModel, OrderStatus } from '../src/models/order.js';
+import { OrderModel } from '../src/models/order.js';
+import { TicketModel } from '../src/models/ticket.js';
+import { OrderStatus } from '@mahonen_consulting_zlc/common';
 
 export let mongo: MongoMemoryServer;
 export let app: FastifyInstance;
 
-export async function createOrders(n: number, userId?: string): Promise<{ id: string; ticketId: string }[]> {
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
-    const docs = await OrderModel.insertMany(
-        Array.from({ length: n }, () => ({
-            userId: userId ?? 'JohnDoe',
-            status: OrderStatus.Pending,
-            ticketId: new mongoose.Types.ObjectId().toString(),
-            expiresAt,
-        }))
-    );
+export interface CreatedTicket {
+    id: string;
+    title: string;
+    price: { amount: string; currency: string };
+    version: number;
+}
 
-    return docs.map(d => ({ id: d._id.toString(), ticketId: d.ticketId }));
+export async function createOrders(n: number, userId?: string): Promise<{ id: string; ticket: CreatedTicket }[]> {
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+    const results: { id: string; ticket: CreatedTicket }[] = [];
+
+    for (let i = 0; i < n; i++) {
+        const ticket = await TicketModel.create({
+            title: faker.commerce.productName(),
+            price: { amount: mongoose.Types.Decimal128.fromString('10.00'), currency: 'EUR' },
+            version: 1,
+        });
+        const order = await OrderModel.create({
+            userId: userId ?? 'JohnDoe',
+            status: OrderStatus.Created,
+            ticket: ticket._id,
+            expiresAt,
+        });
+        results.push({
+            id: order._id.toString(),
+            ticket: {
+                id: ticket._id.toString(),
+                title: ticket.title,
+                price: { amount: ticket.price.amount.toString(), currency: ticket.price.currency },
+                version: ticket.version,
+            },
+        });
+    }
+
+    return results;
 }
 
 export function createJwtCookie(userId = 'JohnDoe'): string[] {

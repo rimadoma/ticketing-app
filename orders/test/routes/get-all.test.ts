@@ -24,6 +24,24 @@ describe('GET /api/orders', () => {
         expect(response.body).toEqual([]);
     });
 
+    it('returns orders with ticket details populated', async () => {
+        const userId = 'JohnDoe';
+        const orders = await createOrders(1, userId);
+        const ticket = orders[0]!.ticket;
+
+        const response = await request(app.server)
+            .get(_route)
+            .set('Cookie', createJwtCookie(userId))
+            .send()
+            .expect(200);
+
+        const [order] = response.body;
+        expect(order.ticket.id).toBe(ticket.id);
+        expect(order.ticket.title).toBe(ticket.title);
+        expect(order.ticket.price).toMatchObject(ticket.price);
+        expect(order.ticket.version).toBe(ticket.version);
+    });
+
     it('returns only orders belonging to the current user', async () => {
         const userId = 'JohnDoe';
         const otherUserId = 'JaneDoe';
