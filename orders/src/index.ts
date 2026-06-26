@@ -1,8 +1,6 @@
 import { AppError, AppErrorIds, EventBus } from '@mahonen_consulting_zlc/common';
 import mongoose from 'mongoose';
 import { createApp } from './app.js';
-import { ticketCreatedPublisher } from './event-bus/ticket-created-publisher.js';
-import { ticketUpdatedPublisher } from './event-bus/ticket-updated-publisher.js';
 
 const ENV_VARS = ['JWT_KEY', 'MONGO_URI'];
 for (const key of ENV_VARS) {
@@ -11,7 +9,7 @@ for (const key of ENV_VARS) {
     }
 }
 
-const _port = 3002;
+const _port = 3003;
 
 async function openDbConnection(): Promise<void> {
     try {
@@ -22,9 +20,7 @@ async function openDbConnection(): Promise<void> {
 }
 
 async function setupEventBus(): Promise<EventBus> {
-    const eventBus = await EventBus.create();
-    await eventBus.addPublishers(ticketCreatedPublisher, ticketUpdatedPublisher);
-    return eventBus;
+    return EventBus.create();
 }
 
 async function shutdown(): Promise<void> {
@@ -38,9 +34,8 @@ await openDbConnection();
 const eventBus = await setupEventBus();
 
 await app.listen({ port: _port, host: "0.0.0.0" });
-console.log(`Tickets listening on ${_port}`);
+console.log(`Orders listening on ${_port}`);
 
-// Graceful shutdown
 const handleSignal =
     () => shutdown()
         .then(() => process.exit(0))

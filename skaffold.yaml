@@ -32,6 +32,14 @@ build:
         manual:
           - src: "tickets/src/**/*.ts"
             dest: "."
+    - image: richdgo4/orders
+      context: .
+      docker:
+        dockerfile: orders/Dockerfile
+      sync:
+        manual:
+          - src: "orders/src/**/*.ts"
+            dest: "."
 
 # Expose ports for easier local testing
 portForward:
@@ -45,6 +53,11 @@ portForward:
     namespace: default
     port: 27017
     localPort: 27018
+  - resourceType: service
+    resourceName: orders-mongo-service
+    namespace: default
+    port: 27017
+    localPort: 27019
     # AMQP
   - resourceType: service
     resourceName: rabbitmq-service

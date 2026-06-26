@@ -23,4 +23,4 @@ if (!process.env.MONGO_URI) {
 const app = await createApp();
 await openDbConnection();
 await app.listen({ port: _port, host: "0.0.0.0" });
-console.log(`Listening on ${_port}`)
+console.log(`Auth listening on ${_port}`)
