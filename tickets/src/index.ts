@@ -22,7 +22,7 @@ async function openDbConnection(): Promise<void> {
 }
 
 async function setupEventBus(): Promise<EventBus> {
-    const eventBus = await EventBus.create('tickets');
+    const eventBus = await EventBus.create();
     await eventBus.addPublishers(ticketCreatedPublisher, ticketUpdatedPublisher);
     return eventBus;
 }

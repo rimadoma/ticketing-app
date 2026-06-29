@@ -10,18 +10,15 @@ export default abstract class Publisher<T extends Event<z.ZodType>> {
     private exchangeName: string | null = null;
     protected abstract route: T['route'];
 
-    async connect(connection: AmqpConnectionManager, serviceName: string): Promise<void> {
+    async connect(connection: AmqpConnectionManager): Promise<void> {
         try {
             const routingKey = this.route.toString();
             this.exchangeName = routingKey.substring(0, routingKey.indexOf('.'));
             const exchangeName = this.exchangeName;
-            const queueName = `${serviceName}.${routingKey}`;
 
             this.channel = connection.createChannel({
                 setup: async (channel: amqp.ConfirmChannel) => {
                     await channel.assertExchange(exchangeName, 'topic', { durable: true });
-                    await channel.assertQueue(queueName, { durable: true });
-                    await channel.bindQueue(queueName, exchangeName, routingKey);
                 },
             });
             await this.channel.waitForConnect();

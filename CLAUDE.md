@@ -74,7 +74,9 @@ A shared Node.js/TypeScript library consumed by all backend microservices for ev
 
 **Broker:** RabbitMQ, running as a Kubernetes Deployment + ClusterIP Service in `infra/k8s/`.  
 **Client:** `amqp-connection-manager` (auto-reconnect wrapper over `amqplib`).  
-**Pattern:** topic exchange — events are routed by type (e.g. `ticket.created`). Each subscribing service binds a durable queue. Messages and queues are durable; consumers ack only after successful processing.
+**Pattern:** topic exchange — events are routed by type (e.g. `ticket.created`). Each subscribing service binds its own durable queue named `${serviceName}.${routingKey}` (e.g. `orders.ticket.created`). Publishers only assert the exchange — queue creation is the listener's responsibility. Messages and queues are durable; consumers ack only after successful processing.
+
+When implementing a new `Listener` subclass, you must declare `protected readonly serviceName` — this becomes the queue name prefix and must be unique per consuming service.
 
 See `event-bus/docs/arch.md` for the full architecture decision record.
 

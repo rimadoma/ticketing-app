@@ -10,12 +10,13 @@ export default abstract class Listener<T extends Event<z.ZodType>> {
     private queueName: string | null = null;
     protected abstract route: T['route'];
     protected abstract schema: ZodType<T['data']>;
+    protected abstract readonly serviceName: string;
 
-    async connect(connection: AmqpConnectionManager, serviceName: string): Promise<void> {
+    async connect(connection: AmqpConnectionManager): Promise<void> {
         try {
             const routingKey = this.route.toString();
             const exchangeName = routingKey.substring(0, routingKey.indexOf('.'));
-            this.queueName = `${serviceName}.${routingKey}`;
+            this.queueName = `${this.serviceName}.${routingKey}`;
             const queueName = this.queueName;
 
             this.channel = connection.createChannel({
