@@ -32,6 +32,7 @@ export async function createOrderRoute(fastify: FastifyInstance): Promise<void> 
                     status: OrderStatus.Created,
                     ticket,
                     expiresAt,
+                    version: 1
                 });
             } catch (err) {
                 throw new AppError(err, AppErrorIds.DB_WRITE_ERROR);
@@ -39,11 +40,11 @@ export async function createOrderRoute(fastify: FastifyInstance): Promise<void> 
 
             try {
                 await orderCreatedPublisher.publish({
-                    id: order._id.toString(),
+                    id: order.id,
                     userId: order.userId,
                     status: OrderStatus.Created,
                     ticket: {
-                        id: ticket._id.toString(),
+                        id: ticket.id,
                         price: {
                             amount: ticket.price.amount.toString(),
                             currency: ticket.price.currency,

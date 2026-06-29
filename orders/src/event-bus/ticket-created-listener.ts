@@ -7,30 +7,28 @@ import { TicketModel } from '../models/ticket.js';
 export class TicketCreatedListener extends Listener<TicketCreatedEvent> {
     protected readonly route = Routes.TICKET_CREATED;
     protected readonly schema = ticketSchema;
+    protected readonly serviceName = 'orders';
 
     protected async onMessage(data: TicketCreatedEvent['data'], _msg: amqp.ConsumeMessage): Promise<void> {
-        let existing;
+        let result;
         try {
-            existing = await TicketModel.findById(data.id);
-        } catch (err) {
-            throw new AppError(err, AppErrorIds.DB_READ_ERROR);
-        }
-        if (existing) {
-            console.warn(`Stale ticket.created event: ticket ${data.id} already exists at v${existing.version}`);
-            return;
-        }
-        try {
-            await TicketModel.create({
-                _id: data.id,
-                title: data.title,
-                price: {
-                    amount: mongoose.Types.Decimal128.fromString(data.price.amount),
-                    currency: data.price.currency,
-                },
-                version: data.version,
-            });
+            result = await TicketModel.updateOne(
+                { _id: data.id },
+                { $setOnInsert: {
+                    title: data.title,
+                    price: {
+                        amount: mongoose.Types.Decimal128.fromString(data.price.amount),
+                        currency: data.price.currency,
+                    },
+                    version: data.version,
+                }},
+                { upsert: true },
+            );
         } catch (err) {
             throw new AppError(err, AppErrorIds.DB_WRITE_ERROR);
+        }
+        if (result.upsertedCount === 0) {
+            console.warn(`Stale ticket.created event: ticket ${data.id} already exists`);
         }
     }
 }

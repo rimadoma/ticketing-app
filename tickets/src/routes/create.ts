@@ -17,6 +17,7 @@ export async function createTicketRoute(fastify: FastifyInstance): Promise<void>
                         currency: price.currency,
                     },
                     userId: request.currentUser!.id,
+                    version: 1
                 });
             } catch (err) {
                 throw new AppError(err, AppErrorIds.DB_WRITE_ERROR);

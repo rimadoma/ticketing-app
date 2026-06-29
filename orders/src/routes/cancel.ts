@@ -17,6 +17,7 @@ export async function cancelOrderRoute(fastify: FastifyInstance): Promise<void> 
             }
             if (!order) throw new NotFoundError();
 
+            // Don't need to do anything if the order's already cancelled
             if (order.status !== OrderStatus.Cancelled) {
                 if (!isDocument(order.ticket)) {
                     // TODO: reconsider cancel event schema strictness — allowing only ticketId would
@@ -45,7 +46,7 @@ export async function cancelOrderRoute(fastify: FastifyInstance): Promise<void> 
                         userId: order.userId,
                         status: OrderStatus.Cancelled,
                         ticket: {
-                            id: ticket.id.toString(),
+                            id: ticket.id,
                             price: {
                                 amount: ticket.price.amount.toString(),
                                 currency: ticket.price.currency,

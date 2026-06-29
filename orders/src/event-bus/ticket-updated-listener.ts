@@ -7,33 +7,27 @@ import { TicketModel } from '../models/ticket.js';
 export class TicketUpdatedListener extends Listener<TicketUpdatedEvent> {
     protected readonly route = Routes.TICKET_UPDATED;
     protected readonly schema = ticketSchema;
+    protected readonly serviceName = 'orders';
 
     protected async onMessage(data: TicketUpdatedEvent['data'], _msg: amqp.ConsumeMessage): Promise<void> {
-        let ticket;
+        let result;
         try {
-            ticket = await TicketModel.findById(data.id);
-        } catch (err) {
-            throw new AppError(err, AppErrorIds.DB_READ_ERROR);
-        }
-
-        if (!ticket) {
-            console.warn(`ticket.updated event for unknown ticket ${data.id} — discarding`);
-            return;
-        }
-        if (data.version <= ticket.version) {
-            console.warn(`Stale ticket.updated event: ticket ${data.id} is at v${ticket.version}, got v${data.version}`);
-            return;
-        }
-
-        ticket.title = data.title;
-        ticket.price.amount = mongoose.Types.Decimal128.fromString(data.price.amount);
-        ticket.price.currency = data.price.currency;
-        ticket.version = data.version;
-        
-        try {
-            await ticket.save();
+            result = await TicketModel.findOneAndUpdate(
+                { _id: data.id, version: { $lt: data.version } },
+                { $set: {
+                    title: data.title,
+                    price: {
+                        amount: mongoose.Types.Decimal128.fromString(data.price.amount),
+                        currency: data.price.currency,
+                    },
+                    version: data.version,
+                }},
+            );
         } catch (err) {
             throw new AppError(err, AppErrorIds.DB_WRITE_ERROR);
+        }
+        if (!result) {
+            console.warn(`ticket.updated event for ticket ${data.id} v${data.version} — not found or stale, discarding`);
         }
     }
 }
