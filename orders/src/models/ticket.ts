@@ -1,7 +1,5 @@
 import mongoose from 'mongoose';
 import { prop, getModelForClass, modelOptions } from '@typegoose/typegoose';
-import { AppError, AppErrorIds } from '@mahonen_consulting_zlc/common';
-import { OrderModel, OrderStatus } from './order.js';
 
 @modelOptions({ schemaOptions: { _id: false } })
 class Price {
@@ -39,16 +37,6 @@ export class Ticket {
 
     @prop({ type: () => mongoose.Schema.Types.Int32, required: true })
     public version!: number;
-
-    public async isReserved(): Promise<boolean> {
-        let existingOrder;
-        try {
-            existingOrder = await OrderModel.findOne({ ticket: this, status: { $ne: OrderStatus.Cancelled } });
-        } catch (err) {
-            throw new AppError(err, AppErrorIds.DB_READ_ERROR);
-        }
-        return existingOrder !== null;
-    }
 }
 
 export const TicketModel = getModelForClass(Ticket);

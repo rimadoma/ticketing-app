@@ -102,7 +102,7 @@ describe('PUT /api/tickets/:id', () => {
 
         expect(ticketUpdatedPublisher.publish).toHaveBeenCalledOnce();
         expect(ticketUpdatedPublisher.publish).toHaveBeenCalledWith({
-            _id: ticket!.id,
+            id: ticket!.id,
             title: 'Mähönen ZLC pyjama party',
             price: { amount: '36.99', currency: 'GBP' },
             userId: 'SomeBloke',

@@ -7,7 +7,6 @@ import { TicketModel } from '../models/ticket.js';
 export class TicketUpdatedListener extends Listener<TicketUpdatedEvent> {
     protected readonly route = Routes.TICKET_UPDATED;
     protected readonly schema = ticketSchema;
-    protected readonly serviceName = 'orders';
 
     protected async onMessage(data: TicketUpdatedEvent['data'], _msg: amqp.ConsumeMessage): Promise<void> {
         let result;

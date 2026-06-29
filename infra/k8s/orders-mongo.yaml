@@ -32,7 +32,7 @@ spec:
             - mongosh
             - mongodb://orders-mongo-service:27017/orders
             - --eval
-            - "db.orders.createIndex({ userId: 1 })"
+            - "db.orders.createIndex({ userId: 1 }); db.orders.createIndex({ ticket: 1 })"
       restartPolicy: OnFailure
 ---
 apiVersion: v1

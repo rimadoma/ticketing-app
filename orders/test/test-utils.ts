@@ -58,24 +58,13 @@ export function createJwtCookie(userId = 'JohnDoe'): string[] {
     return [`token=${token}; Path=/; Secure; HttpOnly;`];
 }
 
-export function testInfra() {
+export function dbInfra() {
     beforeAll(async () => {
-        vi.spyOn(orderCreatedPublisher, 'publish').mockResolvedValue(undefined);
-        vi.spyOn(orderCancelledPublisher, 'publish').mockResolvedValue(undefined);
-
         mongo = await MongoMemoryServer.create();
-        const mongoUri = mongo.getUri();
-
-        await mongoose.connect(mongoUri, {});
-
-        process.env.JWT_KEY = 'test-secret';
-        app = await createApp();
-        await app.ready();
+        await mongoose.connect(mongo.getUri());
     });
 
     beforeEach(async () => {
-        vi.clearAllMocks();
-
         if (mongoose.connection.db) {
             const collections = await mongoose.connection.db.collections();
             for (const collection of collections) {
@@ -89,5 +78,22 @@ export function testInfra() {
         if (mongo) {
             await mongo.stop();
         }
+    });
+}
+
+export function testInfra() {
+    dbInfra();
+
+    beforeAll(async () => {
+        vi.spyOn(orderCreatedPublisher, 'publish').mockResolvedValue(undefined);
+        vi.spyOn(orderCancelledPublisher, 'publish').mockResolvedValue(undefined);
+
+        process.env.JWT_KEY = 'test-secret';
+        app = await createApp();
+        await app.ready();
+    });
+
+    beforeEach(() => {
+        vi.clearAllMocks();
     });
 }

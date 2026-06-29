@@ -10,12 +10,12 @@ export default abstract class Publisher<T extends Event<z.ZodType>> {
     private exchangeName: string | null = null;
     protected abstract route: T['route'];
 
-    async connect(connection: AmqpConnectionManager): Promise<void> {
+    async connect(connection: AmqpConnectionManager, serviceName: string): Promise<void> {
         try {
             const routingKey = this.route.toString();
             this.exchangeName = routingKey.substring(0, routingKey.indexOf('.'));
             const exchangeName = this.exchangeName;
-            const queueName = `${routingKey}.queue`;
+            const queueName = `${serviceName}.${routingKey}`;
 
             this.channel = connection.createChannel({
                 setup: async (channel: amqp.ConfirmChannel) => {

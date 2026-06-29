@@ -19,8 +19,15 @@ export async function createOrderRoute(fastify: FastifyInstance): Promise<void> 
 
             if (!ticket) {
                 throw new NotFoundError();
-            } else if (await ticket.isReserved()) {
-                // Also checks whether the user themselves has already reserved the ticket
+            }
+
+            let existingOrder;
+            try {
+                existingOrder = await OrderModel.findOne({ ticket, status: { $ne: OrderStatus.Cancelled } });
+            } catch (err) {
+                throw new AppError(err, AppErrorIds.DB_READ_ERROR);
+            }
+            if (existingOrder) {
                 throw new BadRequestError("The ticket is already reserved");
             }
 

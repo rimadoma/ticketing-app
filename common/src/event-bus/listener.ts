@@ -7,15 +7,16 @@ import type Event from './events/event.js';
 
 export default abstract class Listener<T extends Event<z.ZodType>> {
     private channel: ChannelWrapper | null = null;
+    private queueName: string | null = null;
     protected abstract route: T['route'];
     protected abstract schema: ZodType<T['data']>;
-    protected abstract readonly serviceName: string;
 
-    async connect(connection: AmqpConnectionManager): Promise<void> {
+    async connect(connection: AmqpConnectionManager, serviceName: string): Promise<void> {
         try {
             const routingKey = this.route.toString();
             const exchangeName = routingKey.substring(0, routingKey.indexOf('.'));
-            const queueName = `${this.serviceName}.${routingKey}`;
+            this.queueName = `${serviceName}.${routingKey}`;
+            const queueName = this.queueName;
 
             this.channel = connection.createChannel({
                 setup: async (channel: amqp.ConfirmChannel) => {
@@ -31,11 +32,11 @@ export default abstract class Listener<T extends Event<z.ZodType>> {
     }
 
     async listen(): Promise<void> {
-        if (!this.channel) {
+        if (!this.channel || !this.queueName) {
             throw new Error("Can't listen without a channel");
         }
 
-        const queueName = `${this.serviceName}.${this.route.toString()}`;
+        const queueName = this.queueName;
 
         await this.channel.addSetup(async (channel: amqp.ConfirmChannel) => {
             await channel.consume(

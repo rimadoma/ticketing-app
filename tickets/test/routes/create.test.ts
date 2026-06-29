@@ -94,7 +94,7 @@ describe('POST /api/tickets', () => {
 
         expect(ticketCreatedPublisher.publish).toHaveBeenCalledOnce();
         expect(ticketCreatedPublisher.publish).toHaveBeenCalledWith({
-            _id: response.body.id,
+            id: response.body.id,
             title: 'Mähönen ZLC launch party',
             price: { amount: '36.99', currency: 'GBP' },
             userId: authenticatedUder,

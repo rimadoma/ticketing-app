@@ -8,26 +8,30 @@ export default class EventBus {
     private readonly publishers: Publisher<Event<z.ZodType>>[] = [];
     private readonly listeners: Listener<Event<z.ZodType>>[] = [];
 
-    private constructor(private readonly connection: AmqpConnectionManager) {}
+    private constructor(
+        private readonly connection: AmqpConnectionManager,
+        private readonly serviceName: string,
+    ) {}
 
     static async create(
+        serviceName: string,
         url: string = process.env.RABBITMQ_URL ?? 'amqp://rabbitmq-service',
     ): Promise<EventBus> {
         const connection = connect(url);
         await connection.connect();
-        return new EventBus(connection);
+        return new EventBus(connection, serviceName);
     }
 
     async addPublishers(...publishers: Publisher<Event<z.ZodType>>[]): Promise<void> {
         for (const publisher of publishers) {
-            await publisher.connect(this.connection);
+            await publisher.connect(this.connection, this.serviceName);
             this.publishers.push(publisher);
         }
     }
 
     async addListeners(...listeners: Listener<Event<z.ZodType>>[]): Promise<void> {
         for (const listener of listeners) {
-            await listener.connect(this.connection);
+            await listener.connect(this.connection, this.serviceName);
             await listener.listen();
             this.listeners.push(listener);
         }
