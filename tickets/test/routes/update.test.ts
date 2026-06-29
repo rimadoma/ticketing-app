@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { describe, it, expect } from 'vitest';
-import { app, createJwtCookie, createTickets, testInfra } from '../test-utils.js';
+import { app, createJwtCookie, createReservedTicket, createTickets, testInfra } from '../test-utils.js';
 import { ticketUpdatedPublisher } from '../../src/event-bus/ticket-updated-publisher.js';
 
 const _route = '/api/tickets';
@@ -73,6 +73,17 @@ describe('PUT /api/tickets/:id', () => {
             .send({ title: 'Mähönen ZLC pyjama party', price: { amount: '36.99', currency: 'GBP' } });
 
         expect(response.statusCode).toEqual(401);
+    });
+
+    it('returns 400 if the ticket is reserved', async () => {
+        const ticket = await createReservedTicket('SomeBloke');
+        const cookie = createJwtCookie('SomeBloke');
+
+        await request(app.server)
+            .put(`${_route}/${ticket.id}`)
+            .set('Cookie', cookie)
+            .send({ title: 'Mähönen ZLC pyjama party', price: { amount: '36.99', currency: 'GBP' } })
+            .expect(400);
     });
 
     it('can only be updated if the current user matches ticket owner', async () => {

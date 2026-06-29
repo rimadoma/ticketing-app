@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import mongoose from 'mongoose';
 import { TicketModel } from '../models/ticket.js';
-import { AppError, AppErrorIds, NotFoundError, ForbiddenError } from '@mahonen_consulting_zlc/common';
+import { AppError, AppErrorIds, BadRequestError, NotFoundError, ForbiddenError } from '@mahonen_consulting_zlc/common';
 import { type TicketBody, type TicketParams, ticketBodySchema, ticketParamsSchema } from './ticket-schema.js';
 import { ticketUpdatedPublisher } from '../event-bus/ticket-updated-publisher.js';
 
@@ -21,6 +21,10 @@ export async function updateTicketRoute(fastify: FastifyInstance): Promise<void>
             // Check user is authorised
             if (ticket.userId !== request.currentUser!.id) {
                 throw new ForbiddenError('Not authorized to edit this ticket');
+            }
+
+            if (ticket.reservingOrderId) {
+                throw new BadRequestError('Cannot edit a reserved ticket');
             }
 
             // Update ticket

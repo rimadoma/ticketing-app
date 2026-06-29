@@ -23,7 +23,7 @@ class Price {
                         currency: ret.price.currency,
                     },
                     userId: ret.userId,
-                    version: ret.version,
+                    version: ret.version
                 };
             }
         }
@@ -41,6 +41,9 @@ export class Ticket {
 
     @prop({ type: () => Number, required: true, default: 1 })
     public version!: number;
+
+    @prop({ type: () => String, default: null })
+    public reservingOrderId!: string | null;
 }
 
 export const TicketModel = getModelForClass(Ticket);

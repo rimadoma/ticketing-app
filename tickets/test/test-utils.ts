@@ -33,6 +33,20 @@ export async function createTickets(nOrTitles: number | string[], userId = 'John
     return docs.map(d => ({ id: d._id.toString(), title: d.title }));
 }
 
+export async function createReservedTicket(userId = 'JohnDoe'): Promise<{ id: string; title: string }> {
+    const doc = await TicketModel.create({
+        title: faker.commerce.productName(),
+        price: {
+            amount: mongoose.Types.Decimal128.fromString(faker.commerce.price({ min: 1, max: 999, dec: 2 })),
+            currency: faker.finance.currencyCode(),
+        },
+        userId,
+        reservingOrderId: '000000000000000000000001',
+    });
+
+    return { id: doc._id.toString(), title: doc.title };
+}
+
 export function createJwtCookie(userId = 'JohnDoe'): string[] {
     const payload = { id: userId, email: 'test@test.com' }
 
@@ -40,6 +54,27 @@ export function createJwtCookie(userId = 'JohnDoe'): string[] {
     const token = jwt.sign(payload, process.env.JWT_KEY!);
 
     return [`token=${token}; Path=/; Secure; HttpOnly;`];
+}
+
+export function dbInfra() {
+    beforeAll(async () => {
+        mongo = await MongoMemoryServer.create();
+        await mongoose.connect(mongo.getUri());
+    });
+
+    beforeEach(async () => {
+        if (mongoose.connection.db) {
+            const collections = await mongoose.connection.db.collections();
+            for (const collection of collections) {
+                await collection.deleteMany({});
+            }
+        }
+    });
+
+    afterAll(async () => {
+        await mongoose.connection.close();
+        if (mongo) await mongo.stop();
+    });
 }
 
 export function testInfra() {

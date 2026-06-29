@@ -1,13 +1,39 @@
 # Ticketing App
+An exercise app for buying tickets to various events created following the course [Microservices with Node JS and React](https://gofore.udemy.com/course/microservices-with-node-js-and-react/learn/lecture/19565190#overview) on Udemy. There are obvious pieces missing like deleting a ticket or any kind of admin users, because this just a learning project. 
+
+Key differences:
+* Using JS modules
+* Jest swapped for Vitest
+* Fastify instead of Express
+* RabbitMQ instead of NATS Streaming
+   * common lib hides RabbitMQ details so that services don't know about it
+* Mongoose used with typegoose
+* Events & requests use zod schemas
+* Dropped mongoose-update-if-current lib
+* Don't care about skipped events, as long as the message has a newer data version it's fine
+
+Most of these changes were made because the course is a few years old and some of the tech is out-of-date.
+
+## Services
+* Auth - CRUD for users, authorization & authentication.
+* Tickets - CRUD for tickets. Each ticket can be sold once.
+* Orders - CRUD for orders. An order tracks the process of purchasing a ticket.
 
 ## Architecture
+Backend follows a clean microservice architecture where each app is completely independent. They have their own DB, they're deployed separately, and there's no coupling. In principle they could be implemented in different technologies, but in practice all use Node.js, Typescript, Fastify and MongoDB with Mongoose & Typegoose. Data would probably fit better in a relational DB like PostgreSQL, but following the course with MongoDB.
+
+Frontend (client) is rendered server side with Next.JS.
+
+Apps are containerised with Docker and can be deployed to a Kubernetes cluster running either locally or GKE (see below). Images are dev images for ease of use and could be optimised for prod for example by precompling TypeScript code.
 
 ### Events & concurrency
+See [docs/events.md](docs/events.md) for a table of which services publish and consume each event.
+
 The backend microservices communicate with each other only indirectly via an event bus implemented in the common library. They publish events without knowing who's listening to them. Each event must have a predefined type and its data must follow a schema. Both are found in the library. Currently the library uses RabbitMQ to implement the event bus. It has durable queues, which support multiple consumers in a round robin fashion. Messages are only acknowledged after successful processing; on failure they are nacked and requeued so another consumer instance can retry. Queues persist messages until they're consumed -- even if the RabbitMQ broker goes down -- but what's not supported is replays. You can't bring up a new service that consumes the entire event history.
 
 Each listener service asserts its own durable queue and binds it to the exchange on startup, before calling `app.listen()`. Publishers only assert the exchange — they don't know who's listening. This means messages published before a listener's queue exists are dropped. In practice this window is just pod startup time: because queues are registered before a service accepts traffic, the only race is another service publishing in the gap while this one is still booting. Kubernetes rolling deploys keep old pods alive until new ones are ready, so this is rarely a problem in practice.
 
-Services handle concurrency by versioning their data in the DB. Versioning starts from 1 and is updated every time the data is modified. Events from other services are written if they carry newer data (version > myVersion) than what the service has stored. Stale data is ignored (version <= myVersion). The version guard is enforced as an atomic DB filter on the write itself — never as a read-then-check-then-write — so concurrent consumer instances cannot race and apply the same event twice. As all events carry complete state, missed messages do not matter. That is, since messages look like {"balance: 100, v: 1" }, {"balance: 120, v: 2" }, {"balance: 150, v: 3" } instead of {"balance: +100, v: 1" }, {"balance: +20, v: 2" }, {"balance: +30, v: 3" } it doesn't matter if version 2 newer arrives.
+Services handle concurrency by versioning their data in the DB. Currently all versioning starts from 1 and is updated by one every time the data is modified, but the only real constraint is that version numbering is monotonically increasing. Events from other services are written if they carry newer data (version > myVersion) than what the service has stored. Stale data is ignored (version <= myVersion). The version guard is enforced as an atomic DB filter on the write itself — never as a read-then-check-then-write — so concurrent consumer instances cannot race and apply the same event twice. As all events carry complete state, missed messages do not matter. That is, since messages look like {"balance: 100, v: 1" }, {"balance: 120, v: 2" }, {"balance: 150, v: 3" } instead of {"balance: +100, v: 1" }, {"balance: +20, v: 2" }, {"balance: +30, v: 3" } it doesn't matter if version 2 newer arrives.
 
 ## How to build, deploy & dev
 

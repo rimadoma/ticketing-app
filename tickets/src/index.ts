@@ -3,6 +3,8 @@ import mongoose from 'mongoose';
 import { createApp } from './app.js';
 import { ticketCreatedPublisher } from './event-bus/ticket-created-publisher.js';
 import { ticketUpdatedPublisher } from './event-bus/ticket-updated-publisher.js';
+import { orderCreatedListener } from './event-bus/order-created-listener.js';
+import { orderCancelledListener } from './event-bus/order-cancelled-listener.js';
 
 const ENV_VARS = ['JWT_KEY', 'MONGO_URI'];
 for (const key of ENV_VARS) {
@@ -24,6 +26,7 @@ async function openDbConnection(): Promise<void> {
 async function setupEventBus(): Promise<EventBus> {
     const eventBus = await EventBus.create();
     await eventBus.addPublishers(ticketCreatedPublisher, ticketUpdatedPublisher);
+    await eventBus.addListeners(orderCreatedListener, orderCancelledListener);
     return eventBus;
 }
 
