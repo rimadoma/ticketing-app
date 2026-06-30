@@ -101,6 +101,14 @@ profiles:
             manual:
               - src: "tickets/src/**/*.ts"
                 dest: "."
+        - image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/orders
+          context: .
+          docker:
+            dockerfile: orders/Dockerfile
+          sync:
+            manual:
+              - src: "orders/src/**/*.ts"
+                dest: "."
         - image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/hedgehog-consultancy
           context: hedgehog-consultancy
           docker:
