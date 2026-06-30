@@ -24,34 +24,23 @@ export default abstract class Listener<T extends Event<z.ZodType>> {
                     await channel.assertExchange(exchangeName, 'topic', { durable: true });
                     await channel.assertQueue(queueName, { durable: true });
                     await channel.bindQueue(queueName, exchangeName, routingKey);
+                    await channel.consume(
+                        queueName,
+                        (message) => {
+                            if (!message) return;
+                            const parsed = this.parseMessage(message);
+                            this.onMessage(parsed, message)
+                                .then(() => this.channel!.ack(message))
+                                .catch(() => this.channel!.nack(message, false, true));
+                        },
+                        { noAck: false },
+                    );
                 },
             });
             await this.channel.waitForConnect();
         } catch (err) {
             throw new AppError(err, AppErrorIds.EVENT_BUS_CONNECTION_ERROR);
         }
-    }
-
-    async listen(): Promise<void> {
-        if (!this.channel || !this.queueName) {
-            throw new Error("Can't listen without a channel");
-        }
-
-        const queueName = this.queueName;
-
-        await this.channel.addSetup(async (channel: amqp.ConfirmChannel) => {
-            await channel.consume(
-                queueName,
-                (message) => {
-                    if (!message) return;
-                    const parsed = this.parseMessage(message);
-                    this.onMessage(parsed, message)
-                        .then(() => this.channel!.ack(message))
-                        .catch(() => this.channel!.nack(message, false, true));
-                },
-                { noAck: false },
-            );
-        });
     }
 
     private parseMessage(message: amqp.ConsumeMessage): T['data'] {

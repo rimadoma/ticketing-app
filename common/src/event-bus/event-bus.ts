@@ -28,7 +28,6 @@ export default class EventBus {
     async addListeners(...listeners: Listener<Event<z.ZodType>>[]): Promise<void> {
         for (const listener of listeners) {
             await listener.connect(this.connection);
-            await listener.listen();
             this.listeners.push(listener);
         }
     }
