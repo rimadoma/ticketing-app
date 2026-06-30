@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: orders-mongo-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-mongo-deployment
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: orders-mongo
+  template:
+    metadata:
+      labels:
+        app: orders-mongo
+    spec:
+      containers:
+        - name: orders-mongo
+          image: mongo:8
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          volumeMounts:
+            - name: orders-mongo-data
+              mountPath: /data/db
+      volumes:
+        - name: orders-mongo-data
+          persistentVolumeClaim:
+            claimName: orders-mongo-pvc
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: orders-mongo-index
+spec:
+  ttlSecondsAfterFinished: 30
+  template:
+    spec:
+      containers:
+        - name: create-index
+          image: mongo:8
+          command:
+            - mongosh
+            - mongodb://orders-mongo-service:27017/orders
+            - --eval
+            - "db.orders.createIndex({ userId: 1 }); db.orders.createIndex({ ticket: 1 })"
+      restartPolicy: OnFailure
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orders-mongo-service
+spec:
+  type: ClusterIP
+  selector:
+    app: orders-mongo
+  ports:
+    - name: db
+      protocol: TCP
+      port: 27017
+      targetPort: 27017
