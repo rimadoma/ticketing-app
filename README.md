@@ -24,7 +24,9 @@ Backend follows a clean microservice architecture where each app is completely i
 
 Frontend (client) is rendered server side with Next.JS.
 
-Apps are containerised with Docker and can be deployed to a Kubernetes cluster running either locally or GKE (see below). Images are dev images for ease of use and could be optimised for prod for example by precompling TypeScript code.
+Apps are containerised with Docker and can be deployed to a Kubernetes cluster running either locally or on GKE (see below). Images are dev images for ease of use and could be optimised for prod for example by precompling TypeScript code.
+
+See **/docs for more details on individual components.
 
 ### Events & concurrency
 See [docs/events.md](docs/events.md) for a table of which services publish and consume each event.
