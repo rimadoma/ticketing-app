@@ -48,6 +48,14 @@ build:
         manual:
           - src: "expiration/src/**/*.ts"
             dest: "."
+    - image: richdgo4/payments
+      context: .
+      docker:
+        dockerfile: payments/Dockerfile
+      sync:
+        manual:
+          - src: "payments/src/**/*.ts"
+            dest: "."
 
 # Expose ports for easier local testing
 portForward:
@@ -66,6 +74,11 @@ portForward:
     namespace: default
     port: 27017
     localPort: 27019
+  - resourceType: service
+    resourceName: payments-mongo-service
+    namespace: default
+    port: 27017
+    localPort: 27020
     # AMQP
   - resourceType: service
     resourceName: rabbitmq-service
@@ -105,6 +118,10 @@ profiles:
           context: .
           docker:
             dockerfile: orders/Dockerfile
+        - image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/expiration
+          context: .
+          docker:
+            dockerfile: expiration/Dockerfile
         - image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/hedgehog-consultancy
           context: hedgehog-consultancy
           docker:
