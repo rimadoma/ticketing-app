@@ -118,6 +118,7 @@ describe('PUT /api/tickets/:id', () => {
             price: { amount: '36.99', currency: 'GBP' },
             userId: 'SomeBloke',
             version: 2,
+            reservingOrderId: null,
         });
     });
 });

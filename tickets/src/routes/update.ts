@@ -51,6 +51,7 @@ export async function updateTicketRoute(fastify: FastifyInstance): Promise<void>
                     },
                     userId: ticket.userId,
                     version: ticket.version,
+                    reservingOrderId: ticket.reservingOrderId,
                 });
             } catch (err) {
                 // TODO: outbox pattern — event may be lost on publish failure

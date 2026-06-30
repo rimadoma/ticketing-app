@@ -8,5 +8,6 @@ export const ticketSchema = z.object({
         currency: z.string().length(3),
     }),
     userId: z.string().min(1),
-    version: z.int32().min(1)
+    version: z.int32().min(1),
+    reservingOrderId: z.string().nullable(),
 });

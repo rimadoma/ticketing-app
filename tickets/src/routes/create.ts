@@ -32,7 +32,8 @@ export async function createTicketRoute(fastify: FastifyInstance): Promise<void>
                         currency: ticket.price.currency,
                     },
                     userId: ticket.userId,
-                    version: ticket.version
+                    version: ticket.version,
+                    reservingOrderId: null,
                 });
             } catch (err) {
                 // TODO: outbox pattern — event may be lost on publish failure

@@ -99,6 +99,7 @@ describe('POST /api/tickets', () => {
             price: { amount: '36.99', currency: 'GBP' },
             userId: authenticatedUder,
             version: 1,
+            reservingOrderId: null,
         });
     });
 });
