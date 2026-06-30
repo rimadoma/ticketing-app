@@ -66,13 +66,7 @@ describe('DELETE /api/orders/:id', () => {
             id: orders[0]!.id,
             userId,
             status: OrderStatus.Cancelled,
-            ticket: {
-                id: orders[0]!.ticket.id,
-                price: {
-                    amount: orders[0]!.ticket.price.amount,
-                    currency: orders[0]!.ticket.price.currency,
-                },
-            },
+            ticketId: orders[0]!.ticket.id,
             expiresAt: expect.any(String),
             version: 2,
         });

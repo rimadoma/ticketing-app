@@ -1,12 +1,12 @@
 import type amqp from 'amqplib';
-import { Listener, Routes, orderSchema, AppError, AppErrorIds } from '@mahonen_consulting_zlc/common';
+import { Listener, Routes, orderCancelledSchema, AppError, AppErrorIds } from '@mahonen_consulting_zlc/common';
 import type { OrderCancelledEvent } from '@mahonen_consulting_zlc/common';
 import { TicketModel } from '../models/ticket.js';
 import { ticketUpdatedPublisher } from './ticket-updated-publisher.js';
 
 export class OrderCancelledListener extends Listener<OrderCancelledEvent> {
     protected readonly route = Routes.ORDER_CANCELLED;
-    protected readonly schema = orderSchema;
+    protected readonly schema = orderCancelledSchema;
     protected readonly serviceName = 'tickets';
 
     // TODO: if order.cancelled never arrives, the ticket stays reserved forever.
@@ -15,7 +15,7 @@ export class OrderCancelledListener extends Listener<OrderCancelledEvent> {
         try {
             // Only cancel if the latest reservation is from this order (messages might arrive out of order)
             ticket = await TicketModel.findOneAndUpdate(
-                { _id: data.ticket.id, reservingOrderId: data.id },
+                { _id: data.ticketId, reservingOrderId: data.id },
                 { $set: { reservingOrderId: null }, $inc: { version: 1 } },
                 { returnDocument: 'after' },
             );

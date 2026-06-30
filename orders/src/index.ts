@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import { createApp } from './app.js';
 import { ticketCreatedListener } from './event-bus/ticket-created-listener.js';
 import { ticketUpdatedListener } from './event-bus/ticket-updated-listener.js';
+import { expirationCompleteListener } from './event-bus/expiration-complete-listener.js';
 import { orderCreatedPublisher } from './event-bus/order-created-publisher.js';
 import { orderCancelledPublisher } from './event-bus/order-cancelled-publisher.js';
 
@@ -25,7 +26,7 @@ async function openDbConnection(): Promise<void> {
 
 async function setupEventBus(): Promise<EventBus> {
     const eventBus = await EventBus.create();
-    await eventBus.addListeners(ticketCreatedListener, ticketUpdatedListener);
+    await eventBus.addListeners(ticketCreatedListener, ticketUpdatedListener, expirationCompleteListener);
     await eventBus.addPublishers(orderCreatedPublisher, orderCancelledPublisher);
     return eventBus;
 }

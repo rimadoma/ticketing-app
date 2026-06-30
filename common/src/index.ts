@@ -14,6 +14,7 @@ export type { TicketCreatedEvent } from './event-bus/events/ticket-created-event
 export type { TicketUpdatedEvent } from './event-bus/events/ticket-updated-event.js';
 export { OrderStatus } from './event-bus/types/order-status.js';
 export { orderSchema } from './event-bus/schemas/order.js';
+export { orderCancelledSchema } from './event-bus/schemas/order-cancelled.js';
 export type { OrderCreatedEvent } from './event-bus/events/order-created-event.js';
 export type { OrderCancelledEvent } from './event-bus/events/order-cancelled-event.js';
 export { expirationSchema } from './event-bus/schemas/expiration.js';

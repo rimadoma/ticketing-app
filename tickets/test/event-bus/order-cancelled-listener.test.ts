@@ -26,10 +26,7 @@ function buildData(ticketId: string, orderId: string, overrides: object = {}) {
         id: orderId,
         userId: new mongoose.Types.ObjectId().toHexString(),
         status: OrderStatus.Cancelled,
-        ticket: {
-            id: ticketId,
-            price: { amount: '49.99', currency: 'EUR' },
-        },
+        ticketId: ticketId,
         expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
         version: 1,
         ...overrides,

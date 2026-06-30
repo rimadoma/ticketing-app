@@ -21,35 +21,33 @@ export interface CreatedTicket {
     version: number;
 }
 
-export async function createOrders(n: number, userId?: string): Promise<{ id: string; ticket: CreatedTicket }[]> {
+export async function createOrder(status = OrderStatus.Created, userId?: string): Promise<{ id: string; ticket: CreatedTicket }> {
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
-    const results: { id: string; ticket: CreatedTicket }[] = [];
+    const ticket = await TicketModel.create({
+        title: faker.commerce.productName(),
+        price: { amount: mongoose.Types.Decimal128.fromString('10.00'), currency: 'EUR' },
+        version: 1,
+    });
+    const order = await OrderModel.create({
+        userId: userId ?? 'JohnDoe',
+        status,
+        ticket: ticket._id,
+        expiresAt,
+        version: 1,
+    });
+    return {
+        id: order._id.toString(),
+        ticket: {
+            id: ticket._id.toString(),
+            title: ticket.title,
+            price: { amount: ticket.price.amount.toString(), currency: ticket.price.currency },
+            version: ticket.version,
+        },
+    };
+}
 
-    for (let i = 0; i < n; i++) {
-        const ticket = await TicketModel.create({
-            title: faker.commerce.productName(),
-            price: { amount: mongoose.Types.Decimal128.fromString('10.00'), currency: 'EUR' },
-            version: 1,
-        });
-        const order = await OrderModel.create({
-            userId: userId ?? 'JohnDoe',
-            status: OrderStatus.Created,
-            ticket: ticket._id,
-            expiresAt,
-            version: 1,
-        });
-        results.push({
-            id: order._id.toString(),
-            ticket: {
-                id: ticket._id.toString(),
-                title: ticket.title,
-                price: { amount: ticket.price.amount.toString(), currency: ticket.price.currency },
-                version: ticket.version,
-            },
-        });
-    }
-
-    return results;
+export async function createOrders(n: number, userId?: string): Promise<{ id: string; ticket: CreatedTicket }[]> {
+    return Promise.all(Array.from({ length: n }, () => createOrder(OrderStatus.Created, userId)));
 }
 
 export function createJwtCookie(userId = 'JohnDoe'): string[] {
