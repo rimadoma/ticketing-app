@@ -16,7 +16,7 @@ export class OrderCancelledListener extends Listener<OrderCancelledEvent> {
             // Only cancel if the latest reservation is from this order (messages might arrive out of order)
             ticket = await TicketModel.findOneAndUpdate(
                 { _id: data.ticket.id, reservingOrderId: data.id },
-                { $unset: { reservingOrderId: '' }, $inc: { version: 1 } },
+                { $set: { reservingOrderId: null }, $inc: { version: 1 } },
                 { returnDocument: 'after' },
             );
         } catch (err) {

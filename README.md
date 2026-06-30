@@ -1,16 +1,17 @@
 # Ticketing App
-An exercise app for buying tickets to various events created following the course [Microservices with Node JS and React](https://gofore.udemy.com/course/microservices-with-node-js-and-react/learn/lecture/19565190#overview) on Udemy. There are obvious pieces missing like deleting a ticket or any kind of admin users, because this just a learning project. 
+An exercise e-commrce app for buying tickets created following the course [Microservices with Node JS and React](https://gofore.udemy.com/course/microservices-with-node-js-and-react/learn/lecture/19565190#overview) on Udemy. There are obvious pieces missing like deleting a ticket or any kind of admin users, because this just a learning project. 
 
-Key differences:
+Key differences from the course:
 * Using JS modules
-* Jest swapped for Vitest
+* Vitest instead of Jest
 * Fastify instead of Express
 * RabbitMQ instead of NATS Streaming
    * common lib hides RabbitMQ details so that services don't know about it
 * Mongoose used with typegoose
 * Events & requests use zod schemas
 * Dropped mongoose-update-if-current lib
-* Don't care about skipped events, as long as the message has a newer data version it's fine
+* Don't care about skipped events, as long as the incoming event has a newer data version it's fine
+* BullMQ instead of Bull for scheduling
 
 Most of these changes were made because the course is a few years old and some of the tech is out-of-date.
 
@@ -18,11 +19,12 @@ Most of these changes were made because the course is a few years old and some o
 * Auth - CRUD for users, authorization & authentication.
 * Tickets - CRUD for tickets. Each ticket can be sold once.
 * Orders - CRUD for orders. An order tracks the process of purchasing a ticket.
+* Expiration - Tracks order expiration. Listens for `order.created`, starts a timer based on the order's `expiresAt`, and publishes `expiration.complete` if the order hasn't been paid in time. No HTTP routes. Uses Redis to persist pending timers across restarts.
 
 ## Architecture
-Backend follows a clean microservice architecture where each app is completely independent. They have their own DB, they're deployed separately, and there's no coupling. In principle they could be implemented in different technologies, but in practice all use Node.js, Typescript, Fastify and MongoDB with Mongoose & Typegoose. Data would probably fit better in a relational DB like PostgreSQL, but following the course with MongoDB.
+Backend follows a clean microservice architecture where each app is completely independent. They're deployed separately with no coupling. Most services have their own MongoDB database; expiration uses Redis instead to persist pending timers. In principle services could be implemented in different technologies, but in practice all use Node.js, TypeScript, and Fastify. Data-backed services use MongoDB with Mongoose & Typegoose. Data would probably fit better in a relational DB like PostgreSQL, but following the course with MongoDB.
 
-Frontend (client) is rendered server side with Next.JS.
+Frontend (client) is rendered server side with Next.JS. Very Web 1.0 aesthetics. 
 
 Apps are containerised with Docker and can be deployed to a Kubernetes cluster running either locally or on GKE (see below). Images are dev images for ease of use and could be optimised for prod for example by precompling TypeScript code.
 

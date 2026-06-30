@@ -40,6 +40,14 @@ build:
         manual:
           - src: "orders/src/**/*.ts"
             dest: "."
+    - image: richdgo4/expiration
+      context: .
+      docker:
+        dockerfile: expiration/Dockerfile
+      sync:
+        manual:
+          - src: "expiration/src/**/*.ts"
+            dest: "."
 
 # Expose ports for easier local testing
 portForward:
@@ -85,10 +93,6 @@ profiles:
           context: .
           docker:
             dockerfile: auth/Dockerfile
-          sync:
-            manual:
-              - src: "auth/src/**/*.ts"
-                dest: "."
         - image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/client
           context: .
           docker:
@@ -97,23 +101,11 @@ profiles:
           context: .
           docker:
             dockerfile: tickets/Dockerfile
-          sync:
-            manual:
-              - src: "tickets/src/**/*.ts"
-                dest: "."
         - image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/orders
           context: .
           docker:
             dockerfile: orders/Dockerfile
-          sync:
-            manual:
-              - src: "orders/src/**/*.ts"
-                dest: "."
         - image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/hedgehog-consultancy
           context: hedgehog-consultancy
           docker:
             dockerfile: Dockerfile
-          sync:
-            manual:
-              - src: "src/**/*.ts"
-                dest: "."

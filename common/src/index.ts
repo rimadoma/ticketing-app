@@ -16,3 +16,5 @@ export { OrderStatus } from './event-bus/types/order-status.js';
 export { orderSchema } from './event-bus/schemas/order.js';
 export type { OrderCreatedEvent } from './event-bus/events/order-created-event.js';
 export type { OrderCancelledEvent } from './event-bus/events/order-cancelled-event.js';
+export { expirationSchema } from './event-bus/schemas/expiration.js';
+export type { ExpirationCompleteEvent } from './event-bus/events/expiration-complete-event.js';
