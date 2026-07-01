@@ -19,5 +19,5 @@ export type { OrderCreatedEvent } from './event-bus/events/order-created-event.j
 export type { OrderCancelledEvent } from './event-bus/events/order-cancelled-event.js';
 export { expirationSchema } from './event-bus/schemas/expiration.js';
 export type { ExpirationCompleteEvent } from './event-bus/events/expiration-complete-event.js';
-export { chargeSchema } from './event-bus/schemas/charge.js';
-export type { ChargeCreatedEvent } from './event-bus/events/charge-created-event.js';
+export { paymentSchema } from './event-bus/schemas/payment.js';
+export type { PaymentCreatedEvent } from './event-bus/events/payment-created-event.js';

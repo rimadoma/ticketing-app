@@ -4,5 +4,5 @@ export enum Routes {
     ORDER_CREATED = 'order.created',
     ORDER_CANCELLED = 'order.cancelled',
     EXPIRATION_COMPLETE = 'expiration.complete',
-    CHARGE_CREATED = 'charge.created',
+    PAYMENT_CREATED = 'payment.created',
 }
