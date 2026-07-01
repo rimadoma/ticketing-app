@@ -63,13 +63,7 @@ skaffold dev          # local cluster — builds images, deploys, watches for fi
 skaffold run -p gcp   # one-shot deploy to GCP (no file watching)
 ```
 
-Skaffold syncs source files directly into running containers without a full image rebuild (all use repo root as context):
-- `auth`: `auth/src/**/*.ts`
-- `tickets`: `tickets/src/**/*.ts`
-- `orders`: `orders/src/**/*.ts`
-- `expiration`: `expiration/src/**/*.ts`
-- `payments`: `payments/src/**/*.ts`
-- `client`: `client/pages/**/*.js`
+Skaffold syncs source directly into running containers without a full image rebuild (all use repo root as build context): each backend service's `src/**/*.ts` and the client's `pages/**/*.js`. See `skaffold.yaml` for the exact sync rules.
 
 `client` runs webpack (`next dev --webpack`) instead of Turbopack because Skaffold's sync uses `kubectl cp`, which doesn't trigger inotify events. Webpack is configured to poll every 300ms in `next.config.js` so it detects synced files. `next build` also uses `--webpack` (see `package.json`) — the webpack config in `next.config.js` conflicts with Turbopack at build time.
 
@@ -95,22 +89,27 @@ See `event-bus/docs/arch.md` for the full architecture decision record.
 
 After changing `common/src/`, always rebuild (`npm run build` in `common/`) before the changes are visible to services — services import from `common/dist/`.
 
-`AppErrorIds` in `common/src/errors/app-error-ids.ts` provides taxonomy constants for `AppError`'s `errorId` parameter. Always use these instead of raw numbers. Current taxonomy:
+`AppErrorIds` in `common/src/errors/app-error-ids.ts` provides taxonomy constants for `AppError`'s `errorId` parameter — always use these rather than raw numbers. Each maps to a failure class:
 
-| Constant | Value | Use for |
-|---|---|---|
-| `DB_CONNECTION_ERROR` | 1 | `mongoose.connect()` failure |
-| `DB_READ_ERROR` | 2 | `find` / `findOne` / `findById` failure |
-| `DB_WRITE_ERROR` | 3 | `create` / `save` / `update` failure |
-| `JWT_SIGN_ERROR` | 4 | `jwt.sign()` failure |
-| `EVENT_BUS_CONNECTION_ERROR` | 5 | `EventBus.create()` / publisher connect failure |
-| `STRIPE_API_ERROR` | 6 | `stripe.paymentIntents.create()` failure |
+| Constant | Use for |
+|---|---|
+| `DB_CONNECTION_ERROR` | `mongoose.connect()` failure |
+| `DB_READ_ERROR` | `find` / `findOne` / `findById` failure |
+| `DB_WRITE_ERROR` | `create` / `save` / `update` failure |
+| `JWT_SIGN_ERROR` | `jwt.sign()` failure |
+| `EVENT_BUS_CONNECTION_ERROR` | `EventBus.create()` / publisher connect failure |
+| `STRIPE_API_ERROR` | `stripe.paymentIntents.create()` failure |
 
-If none of these fit, add a new constant to `app-error-ids.ts` rather than using a raw number.
+If none fit, add a new constant to `app-error-ids.ts` rather than using a raw number.
 
 ### Event versioning
 
-Every event payload must include a `version: z.int32().min(1)` field (defined in `ticketSchema` in `common/src/event-bus/schemas/ticket.ts`). Versions start at **1** and increment by 1 with each update. Services use this for optimistic concurrency: a listener rejects (nacks and requeues) any event whose version is not exactly `currentVersion + 1`.
+Every event schema in `common/src/event-bus/schemas/` carries a `version: z.int32().min(1)` field, starting at **1** and incremented on each change to the underlying record. Publishing it is a producer-side contract (`required` on every event), but how a consumer guards on it depends on *why* it's listening:
+
+- **Replicating another service's data** — e.g. `orders` keeps a local copy of tickets via `ticket-created`/`ticket-updated-listener`. It applies no business logic, just wants the latest snapshot, so it guards on version (`{ version: { $lt: data.version } }`) to avoid overwriting newer data with a stale or reordered event.
+- **Transitioning its own aggregate** — e.g. `orders` marking an order `complete` on `payment.created`, or `cancelled` on `expiration.complete`. The guard is a domain rule over the record's own status (skip orders already `cancelled`/`complete`), not version.
+
+Either way, the guard scopes the Mongo write so a stale or duplicate delivery matches nothing and becomes a no-op; when nothing matches, the listener logs a warning and acks — stale events are discarded, not requeued.
 
 ### Frontend (`client/`)
 
