@@ -1,5 +1,5 @@
 # Ticketing App
-An exercise e-commrce app for buying tickets created following the course [Microservices with Node JS and React](https://gofore.udemy.com/course/microservices-with-node-js-and-react/learn/lecture/19565190#overview) on Udemy. There are obvious pieces missing like deleting a ticket or any kind of admin users, because this just a learning project. 
+An exercise e-commerce app for buying tickets created following the course [Microservices with Node JS and React](https://gofore.udemy.com/course/microservices-with-node-js-and-react/learn/lecture/19565190#overview) on Udemy. There are obvious pieces missing like deleting a ticket or any kind of admin users, because this is just a learning project. 
 
 Key differences from the course:
 * Using JS modules
@@ -22,13 +22,14 @@ Most of these changes were made because the course is a few years old and some o
 * Orders - Manages the purchase lifecycle for a ticket. Exposes create, get, and cancel routes. Publishes `order.created` and `order.cancelled`; listens for `ticket.created` and `ticket.updated` to maintain a local copy of ticket details (orders store a denormalised snapshot of the ticket), and `expiration.complete` to cancel unpaid orders when they time out.
 * Expiration - Tracks order expiration. Listens for `order.created`, starts a timer based on the order's `expiresAt`, and always publishes `expiration.complete` when the timer fires. The orders service decides whether to act on it. No HTTP routes. Uses Redis to persist pending timers across restarts.
 * Payments - Processes card payments via Stripe Payment Intents. Listens for `order.created` and `order.cancelled`, exposes `POST /api/payments`, and publishes `payment.created` on success.
+* Hedgehog Consultancy - A GCP-only easter egg exposing `GET /api/hedgehog/consult`. No DB, no events, no point — it just dispenses (legally non-binding) hedgehog wisdom. Only built and routed in the GCP profile; the local cluster leaves it out.
 
 ## Architecture
 Backend follows a clean microservice architecture where each app is completely independent. They're deployed separately with no coupling. Most services have their own MongoDB database; expiration uses Redis instead to persist pending timers. In principle services could be implemented in different technologies, but in practice all use Node.js, TypeScript, and Fastify. Data-backed services use MongoDB with Mongoose & Typegoose. Data would probably fit better in a relational DB like PostgreSQL, but following the course with MongoDB.
 
 Frontend (client) is rendered server side with Next.JS. Very Web 1.0 aesthetics. 
 
-Apps are containerised with Docker and can be deployed to a Kubernetes cluster running either locally or on GKE (see below). Images are dev images for ease of use and could be optimised for prod for example by precompling TypeScript code.
+Apps are containerised with Docker and can be deployed to a Kubernetes cluster running either locally or on GKE (see below). The backend images are dev images for ease of use (they run `tsx` rather than precompiled JS) and could be optimised for prod. The client is the exception: `client/Dockerfile` runs `next dev` for local work, while `client/Dockerfile.prod` (used for GCP) does a real `next build` + `next start`.
 
 See **/docs for more details on individual components.
 
@@ -39,7 +40,9 @@ The backend microservices communicate with each other only indirectly via an eve
 
 Each listener service asserts its own durable queue and binds it to the exchange on startup, before calling `app.listen()`. Publishers only assert the exchange — they don't know who's listening. This means messages published before a listener's queue exists are dropped. In practice this window is just pod startup time: because queues are registered before a service accepts traffic, the only race is another service publishing in the gap while this one is still booting. Kubernetes rolling deploys keep old pods alive until new ones are ready, so this is rarely a problem in practice.
 
-Services handle concurrency by versioning their data in the DB. Currently all versioning starts from 1 and is updated by one every time the data is modified, but the only real constraint is that version numbering is monotonically increasing. Events from other services are written if they carry newer data (version > myVersion) than what the service has stored. Stale data is ignored (version <= myVersion). The version guard is enforced as an atomic DB filter on the write itself — never as a read-then-check-then-write — so concurrent consumer instances cannot race and apply the same event twice. As all events carry complete state, missed messages do not matter. That is, since messages look like {"balance: 100, v: 1" }, {"balance: 120, v: 2" }, {"balance: 150, v: 3" } instead of {"balance: +100, v: 1" }, {"balance: +20, v: 2" }, {"balance: +30, v: 3" } it doesn't matter if version 2 newer arrives.
+Services handle concurrency by versioning their data in the DB. Versioning starts from 1 and increments by one on every modification, but the only real constraint is that it's monotonically increasing. An incoming event is written only if it carries newer data (`version > myVersion`); stale data (`version <= myVersion`) is ignored. The guard is enforced as an atomic DB filter on the write itself — never read-then-check-then-write — so concurrent consumer instances can't race and apply the same event twice.
+
+Because every event carries **complete** state rather than a delta, an out-of-order or dropped event doesn't corrupt anything. Events look like `{ balance: 100, v: 1 }`, `{ balance: 120, v: 2 }`, `{ balance: 150, v: 3 }` — not `{ +100, v: 1 }`, `{ +20, v: 2 }`, `{ +30, v: 3 }` — so applying the latest version you've seen always leaves you correct, no matter what arrived in between.
 
 ## How to build, deploy & dev
 
@@ -54,6 +57,8 @@ npm run dev
 ```
 
 The service will be available at `http://localhost:<port>/<route>`, e.g. auth at `http://localhost:3000/api/users/signup`
+
+To save doing this per service by hand, `scripts/` has helpers that loop over the services: `build-all.sh` (install + build), `test-all.sh` (run every test suite), and `prepare-for-publish.sh <major|minor|patch>` (install, build, and bump the common library's version, ready for `npm publish`).
 
 #### Environment variables
 

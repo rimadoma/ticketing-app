@@ -23,7 +23,6 @@ infra/
   k8s/              # Local Kubernetes manifests
   k8s-gcp/          # GCP Kubernetes manifests
 skaffold.yaml       # Local dev orchestration
-docker-compose.yml  # Alternative: run services directly with Docker
 ```
 
 ## Common Commands
