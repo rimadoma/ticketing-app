@@ -2,9 +2,10 @@ import { AppError, AppErrorIds, EventBus } from '@mahonen_consulting_zlc/common'
 import mongoose from 'mongoose';
 import { createApp } from './app.js';
 import { orderCancelledListener } from './event-bus/order-cancelled-listener.js';
+import { paymentCreatedPublisher } from './event-bus/payment-created-publisher.js';
 import { orderCreatedListener } from './event-bus/order-created-listener.js';
 
-const ENV_VARS = ['JWT_KEY', 'MONGO_URI'];
+const ENV_VARS = ['JWT_KEY', 'MONGO_URI', 'STRIPE_KEY'];
 for (const key of ENV_VARS) {
     if (!process.env[key]) {
         throw new Error(`${key} must be defined`);
@@ -24,7 +25,7 @@ async function openDbConnection(): Promise<void> {
 async function setupEventBus(): Promise<EventBus> {
     const eventBus = await EventBus.create();
     await eventBus.addListeners(orderCreatedListener, orderCancelledListener);
-    // await eventBus.addPublishers(chargeCreatedPublisher);
+    await eventBus.addPublishers(paymentCreatedPublisher);
     return eventBus;
 }
 

@@ -12,6 +12,7 @@ Key differences from the course:
 * Dropped mongoose-update-if-current lib
 * Don't care about skipped events, as long as the incoming event has a newer data version it's fine
 * BullMQ instead of Bull for scheduling
+* Stripe payment intent instead of tokens
 
 Most of these changes were made because the course is a few years old and some of the tech is out-of-date.
 
@@ -62,6 +63,7 @@ Some services require environment variables that are normally injected by Kubern
 | `JWT_KEY`      | Secret used to sign/verify JWTs — any string works locally |
 | `MONGO_URI`    | MongoDB connection string, e.g. `mongodb://localhost:27017/<service>` |
 | `RABBITMQ_URL` | RabbitMQ connection string, e.g.`amqp://localhost:5672`  |
+| `STRIPE_KEY`   | Stripe secret key (`sk_test_...`) — payments service only |
 
 For example on Windows:
 ```
@@ -102,6 +104,10 @@ You can run the apps on a local cluster or deploy them to GCP — pick one of th
    ```bash
    kubectl create secret generic jwt-secret --from-literal=JWT_KEY=mysupersecretthingy
    ```
+4. Create the Stripe secret (payments service)
+   ```bash
+   kubectl create secret generic stripe-secret --from-literal=STRIPE_KEY=sk_test_blah
+   ```
 > **Note:** MongoDB deployments in the local cluster have no PersistentVolumeClaims — data is stored in the container's ephemeral layer and lost when a pod restarts. This is intentional for local dev; the GCP manifests include PVCs.
 
 **Run:**
@@ -134,11 +140,13 @@ The RabbitMQ management UI is available at `http://localhost:15672` (default cre
    ```
    gcloud artifacts repositories create ticketing --repository-format=docker --location=europe-north1 --project=project-809e066d-e5ea-4d42-aa1
    ```
-5. Create a secret with Secret Manager called `JWT_KEY`
-6. Pull the value from Secret Manager
+5. Create secrets with Secret Manager called `JWT_KEY` and `STRIPE_KEY`
+6. Pull the values from Secret Manager
    ```
    for /f "delims=" %i in ('gcloud secrets versions access latest --secret=JWT_KEY') do set JWT_VAL=%i
    kubectl create secret generic jwt-secret --from-literal=JWT_KEY=%JWT_VAL%
+   for /f "delims=" %i in ('gcloud secrets versions access latest --secret=STRIPE_KEY') do set STRIPE_VAL=%i
+   kubectl create secret generic stripe-secret --from-literal=STRIPE_KEY=%STRIPE_VAL%
    ```
 
 **Cluster setup:**

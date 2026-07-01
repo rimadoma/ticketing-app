@@ -52,13 +52,6 @@ spec:
             name: payments-service
             port:
               number: 3001
-      - path: /api/payments/.+
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: payments-service
-            port:
-              number: 3001
       - path: /
         pathType: ImplementationSpecific
         backend:

@@ -4,8 +4,8 @@ import { OrderStatus } from '@mahonen_consulting_zlc/common';
 export { OrderStatus };
 
 class Price {
-    @prop({ type: () => String, required: true })
-    public amount!: string;
+    @prop({ type: () => mongoose.Schema.Types.Decimal128, required: true })
+    public amount!: mongoose.Types.Decimal128;
 
     @prop({ type: () => String, required: true })
     public currency!: string;
@@ -20,7 +20,7 @@ class Price {
                     id: ret._id.toString(),
                     userId: ret.userId,
                     status: ret.status,
-                    price: ret.price,
+                    price: { amount: ret.price.amount.toString(), currency: ret.price.currency },
                     version: ret.version,
                 };
             },

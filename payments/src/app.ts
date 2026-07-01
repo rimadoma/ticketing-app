@@ -1,8 +1,9 @@
 import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
 import { serializerCompiler, validatorCompiler } from '@fastify/type-provider-zod';
-import { errorHandler, schemaErrorFormatter, NotFoundError, currentUserPlugin } from '@mahonen_consulting_zlc/common';
+import { errorHandler, schemaErrorFormatter, NotFoundError, currentUserPlugin, requireAuthPlugin } from '@mahonen_consulting_zlc/common';
 import fastifyCookie from '@fastify/cookie';
+import { createRoute } from './routes/create.js';
 
 export async function createApp(): Promise<FastifyInstance> {
     const instance = Fastify({ trustProxy: true });
@@ -19,7 +20,10 @@ export async function createApp(): Promise<FastifyInstance> {
 
     instance.register(currentUserPlugin);
 
-    // TODO: register route plugins here
+    instance.register(async (protectedScope: FastifyInstance) => {
+        await requireAuthPlugin(protectedScope);
+        protectedScope.register(createRoute);
+    });
 
     return instance;
 }

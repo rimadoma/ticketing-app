@@ -16,7 +16,10 @@ export class OrderCreatedListener extends Listener<OrderCreatedEvent> {
                 { $setOnInsert: {
                     userId: data.userId,
                     status: data.status,
-                    price: data.ticket.price,
+                    price: {
+                        amount: mongoose.Types.Decimal128.fromString(data.ticket.price.amount),
+                        currency: data.ticket.price.currency,
+                    },
                     version: data.version,
                 }},
                 { upsert: true },

@@ -38,7 +38,7 @@ describe('OrderCreatedListener', () => {
         expect(order).not.toBeNull();
         expect(order!.userId).toBe(data.userId);
         expect(order!.status).toBe(data.status);
-        expect(order!.price.amount).toBe(data.ticket.price.amount);
+        expect(order!.price.amount.toString()).toBe(data.ticket.price.amount);
         expect(order!.price.currency).toBe(data.ticket.price.currency);
         expect(order!.version).toBe(data.version);
     });
