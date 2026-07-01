@@ -21,7 +21,6 @@ class Price {
                     userId: ret.userId,
                     status: ret.status,
                     price: ret.price,
-                    expiresAt: ret.expiresAt,
                     version: ret.version,
                 };
             },
@@ -37,9 +36,6 @@ export class Order {
 
     @prop({ type: () => Price, required: true, _id: false })
     public price!: Price;
-
-    @prop({ type: () => Date, required: true })
-    public expiresAt!: Date;
 
     @prop({ type: () => mongoose.Schema.Types.Int32, required: true })
     public version!: number;

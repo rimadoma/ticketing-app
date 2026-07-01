@@ -17,7 +17,6 @@ export class OrderCreatedListener extends Listener<OrderCreatedEvent> {
                     userId: data.userId,
                     status: data.status,
                     price: data.ticket.price,
-                    expiresAt: new Date(data.expiresAt),
                     version: data.version,
                 }},
                 { upsert: true },

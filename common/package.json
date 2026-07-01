@@ -1,6 +1,6 @@
 {
   "name": "@mahonen_consulting_zlc/common",
-  "version": "8.0.1",
+  "version": "8.1.0",
   "description": "Shared library for ticketing app microservices",
   "type": "module",
   "main": "./dist/index.js",
