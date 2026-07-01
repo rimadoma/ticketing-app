@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import mongoose from 'mongoose';
 import { OrderModel, OrderStatus } from '../models/order.js';
-import { AppError, AppErrorIds, NotFoundError } from '@mahonen_consulting_zlc/common';
+import { AppError, AppErrorIds, BadRequestError, NotFoundError } from '@mahonen_consulting_zlc/common';
 import { type OrderParams, orderParamsSchema } from './order-schema.js';
 import { orderCancelledPublisher } from '../event-bus/order-cancelled-publisher.js';
 
@@ -15,6 +15,10 @@ export async function cancelOrderRoute(fastify: FastifyInstance): Promise<void> 
                 throw new AppError(err, AppErrorIds.DB_READ_ERROR);
             }
             if (!order) throw new NotFoundError();
+
+            if (order.status === OrderStatus.Complete) {
+                throw new BadRequestError('Cannot cancel a completed order');
+            }
 
             // Don't need to do anything if the order's already cancelled
             if (order.status !== OrderStatus.Cancelled) {

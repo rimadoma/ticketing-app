@@ -1,3 +1,4 @@
+// TODO AwaitingPayment not used -- reservation is just an internal flag for tickets to block edits. Remove Created and use AwaitingPayment instead
 export enum OrderStatus {
     // When the order has been created, but its ticket hasn't been reserved yet
     Created = 'created',

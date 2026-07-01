@@ -17,10 +17,11 @@ Key differences from the course:
 Most of these changes were made because the course is a few years old and some of the tech is out-of-date.
 
 ## Services
-* Auth - CRUD for users, authorization & authentication.
-* Tickets - CRUD for tickets. Each ticket can be sold once.
-* Orders - CRUD for orders. An order tracks the process of purchasing a ticket.
-* Expiration - Tracks order expiration. Listens for `order.created`, starts a timer based on the order's `expiresAt`, and publishes `expiration.complete` if the order hasn't been paid in time. No HTTP routes. Uses Redis to persist pending timers across restarts.
+* Auth - Manages user accounts. Exposes sign-up, sign-in, sign-out, and current-user routes. Issues JWTs stored in cookies; no events published or consumed.
+* Tickets - Manages ticket listings. Exposes create, update, and get routes. Publishes `ticket.created` and `ticket.updated`; listens for `order.created` and `order.cancelled` to lock/unlock tickets so a reserved ticket can't be edited.
+* Orders - Manages the purchase lifecycle for a ticket. Exposes create, get, and cancel routes. Publishes `order.created` and `order.cancelled`; listens for `ticket.created` and `ticket.updated` to maintain a local copy of ticket details (orders store a denormalised snapshot of the ticket), and `expiration.complete` to cancel unpaid orders when they time out.
+* Expiration - Tracks order expiration. Listens for `order.created`, starts a timer based on the order's `expiresAt`, and always publishes `expiration.complete` when the timer fires. The orders service decides whether to act on it. No HTTP routes. Uses Redis to persist pending timers across restarts.
+* Payments - Processes card payments via Stripe Payment Intents. Listens for `order.created` and `order.cancelled`, exposes `POST /api/payments`, and publishes `payment.created` on success.
 
 ## Architecture
 Backend follows a clean microservice architecture where each app is completely independent. They're deployed separately with no coupling. Most services have their own MongoDB database; expiration uses Redis instead to persist pending timers. In principle services could be implemented in different technologies, but in practice all use Node.js, TypeScript, and Fastify. Data-backed services use MongoDB with Mongoose & Typegoose. Data would probably fit better in a relational DB like PostgreSQL, but following the course with MongoDB.

@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { describe, it, expect } from 'vitest';
 import mongoose from 'mongoose';
-import { app, createJwtCookie, createOrders, testInfra } from '../test-utils.js';
+import { app, createJwtCookie, createOrder, createOrders, testInfra } from '../test-utils.js';
 import { OrderModel, OrderStatus } from '../../src/models/order.js';
 import { orderCancelledPublisher } from '../../src/event-bus/order-cancelled-publisher.js';
 
@@ -70,5 +70,18 @@ describe('DELETE /api/orders/:id', () => {
             expiresAt: expect.any(String),
             version: 2,
         });
+    });
+
+    it('returns 400 when the order is already complete', async () => {
+        const userId = 'JohnDoe';
+        const { id } = await createOrder(OrderStatus.Complete, userId);
+
+        await request(app.server)
+            .delete(route(id))
+            .set('Cookie', createJwtCookie(userId))
+            .send()
+            .expect(400);
+
+        expect(orderCancelledPublisher.publish).not.toHaveBeenCalled();
     });
 });

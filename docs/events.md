@@ -7,4 +7,4 @@
 | `order.created` | orders | tickets, expiration, payments |
 | `order.cancelled` | orders | tickets |
 | `expiration.complete` | expiration | orders |
-| `charge.created` | payments | (none yet) |
+| `payment.created` | payments | orders |

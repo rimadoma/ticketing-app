@@ -14,6 +14,11 @@ client/             # Next.js frontend (port 3000) — catch-all /
 common/             # Shared library (@mahonen_consulting_zlc/common) — published to npm
 event-bus/          # Shared RabbitMQ event-bus library — consumed by all backend services
   docs/arch.md      # Architecture decision record
+expiration/         # Expiration service — no HTTP routes
+orders/             # Orders service (port 3003) — /api/orders/*
+payments/           # Payments service (port 3001) — /api/payments
+  docs/arch.md      # Stripe integration and idempotency decisions
+tickets/            # Tickets service (port 3002) — /api/tickets/*
 infra/
   k8s/              # Local Kubernetes manifests
   k8s-gcp/          # GCP Kubernetes manifests
@@ -58,8 +63,12 @@ skaffold dev          # local cluster — builds images, deploys, watches for fi
 skaffold run -p gcp   # one-shot deploy to GCP (no file watching)
 ```
 
-Skaffold syncs source files directly into running containers without a full image rebuild (both use repo root as context):
+Skaffold syncs source files directly into running containers without a full image rebuild (all use repo root as context):
 - `auth`: `auth/src/**/*.ts`
+- `tickets`: `tickets/src/**/*.ts`
+- `orders`: `orders/src/**/*.ts`
+- `expiration`: `expiration/src/**/*.ts`
+- `payments`: `payments/src/**/*.ts`
 - `client`: `client/pages/**/*.js`
 
 `client` runs webpack (`next dev --webpack`) instead of Turbopack because Skaffold's sync uses `kubectl cp`, which doesn't trigger inotify events. Webpack is configured to poll every 300ms in `next.config.js` so it detects synced files. `next build` also uses `--webpack` (see `package.json`) — the webpack config in `next.config.js` conflicts with Turbopack at build time.
@@ -94,6 +103,8 @@ After changing `common/src/`, always rebuild (`npm run build` in `common/`) befo
 | `DB_READ_ERROR` | 2 | `find` / `findOne` / `findById` failure |
 | `DB_WRITE_ERROR` | 3 | `create` / `save` / `update` failure |
 | `JWT_SIGN_ERROR` | 4 | `jwt.sign()` failure |
+| `EVENT_BUS_CONNECTION_ERROR` | 5 | `EventBus.create()` / publisher connect failure |
+| `STRIPE_API_ERROR` | 6 | `stripe.paymentIntents.create()` failure |
 
 If none of these fit, add a new constant to `app-error-ids.ts` rather than using a raw number.
 
@@ -118,10 +129,15 @@ Routes define Zod schemas inline or in a sibling `*-schema.ts` / `*-credentials.
 
 The NGINX Ingress controller routes by path to each service's ClusterIP:
 
-| Path pattern    | Service          | Port |
-|-----------------|------------------|------|
-| `/api/users/.*` | `auth-service`   | 3000 |
-| `/`             | `client-service` | 3000 |
+| Path pattern      | Service            | Port |
+|-------------------|--------------------|------|
+| `/api/users/.*`   | `auth-service`     | 3000 |
+| `/api/tickets`    | `tickets-service`  | 3002 |
+| `/api/tickets/.+` | `tickets-service`  | 3002 |
+| `/api/orders`     | `orders-service`   | 3003 |
+| `/api/orders/.+`  | `orders-service`   | 3003 |
+| `/api/payments`   | `payments-service` | 3001 |
+| `/`               | `client-service`   | 3000 |
 
 Rules are evaluated most-specific first. `/` is the catch-all for the Next.js frontend — unknown routes return a 404 from Next.js, not the ingress.
 

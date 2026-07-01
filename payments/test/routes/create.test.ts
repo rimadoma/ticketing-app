@@ -1,6 +1,12 @@
 import request from 'supertest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import mongoose from 'mongoose';
+import { OrderStatus } from '@mahonen_consulting_zlc/common';
+import { app, createJwtCookie, testInfra } from '../test-utils.js';
+import { OrderModel } from '../../src/models/order.js';
+import { PaymentModel } from '../../src/models/payment.js';
+import { stripe } from '../../src/stripe.js';
+import { paymentCreatedPublisher } from '../../src/event-bus/payment-created-publisher.js';
 
 vi.mock('../../src/stripe.js', () => ({
     stripe: {
@@ -12,12 +18,6 @@ vi.mock('../../src/stripe.js', () => ({
 vi.mock('../../src/event-bus/payment-created-publisher.js', () => ({
     paymentCreatedPublisher: { publish: vi.fn() },
 }));
-import { OrderStatus } from '@mahonen_consulting_zlc/common';
-import { app, createJwtCookie, testInfra } from '../test-utils.js';
-import { OrderModel } from '../../src/models/order.js';
-import { PaymentModel } from '../../src/models/payment.js';
-import { stripe } from '../../src/stripe.js';
-import { paymentCreatedPublisher } from '../../src/event-bus/payment-created-publisher.js';
 
 const ROUTE = '/api/payments';
 const VALID_ORDER_ID = 'a'.repeat(24);
@@ -116,7 +116,7 @@ describe('POST /api/payments', () => {
     it('returns 200 with the order has already been paid', async () => {
         const userId = 'JohnDoe';
         const order = await createOrder(userId);
-        await PaymentModel.create({ _id: 'pi_existing', orderId: order._id, version: 1 });
+        await PaymentModel.create({ _id: 'pi_existing', orderId: order, version: 1 });
 
         const response = await request(app.server)
             .post(ROUTE)

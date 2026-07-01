@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { FastifyInstance } from 'fastify';
 import type mongoose from 'mongoose';
 import { AppError, AppErrorIds, BadRequestError, NotFoundError } from '@mahonen_consulting_zlc/common';
+import type { DocumentType } from '@typegoose/typegoose';
 import { Order, OrderModel, OrderStatus } from '../models/order.js';
 import { PaymentModel } from '../models/payment.js';
 import { stripe } from '../stripe.js';
@@ -24,7 +25,7 @@ export async function createRoute(fastify: FastifyInstance): Promise<void> {
     fastify.post<{ Body: ChargeBody }>('/api/payments', { schema: chargeBodySchema },
         async (request, reply) => {
             // Find order
-            let order: Order | null;
+            let order: DocumentType<Order> | null;
             try {
                 order = await OrderModel.findOne({
                     _id: request.body.orderId,
@@ -54,7 +55,7 @@ export async function createRoute(fastify: FastifyInstance): Promise<void> {
             }
 
             // Create a payment intent with stripe
-            const orderId = request.body.orderId;
+            const orderId = order._id.toHexString();
             let paymentIntent;
             try {
                 paymentIntent = await stripe.paymentIntents.create({
@@ -75,8 +76,9 @@ export async function createRoute(fastify: FastifyInstance): Promise<void> {
             }
 
             // Persist payment
+            let payment;
             try {
-                await PaymentModel.create({
+                payment = await PaymentModel.create({
                     _id: paymentIntent.id,
                     orderId: order,
                     version: 1,
@@ -87,9 +89,9 @@ export async function createRoute(fastify: FastifyInstance): Promise<void> {
 
             // Publish event
             await paymentCreatedPublisher.publish({
-                id: paymentIntent.id,
+                id: payment._id,
                 orderId,
-                version: 1,
+                version: payment.version,
                 price: {
                     amount: order.price.amount.toString(),
                     currency: order.price.currency,
