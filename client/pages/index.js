@@ -1,9 +1,38 @@
-const LandingPage = ({ currentUser }) => {
-    if (currentUser) {
-        return <h1>You're signed in</h1>;
-    }
+import { CURRENCIES } from '../constants';
 
-   return <h1>You're NOT signed in</h1>;
+const LandingPage = ({ currentUser, tickets }) => {
+    const rows = tickets.map(ticket => {
+        const symbol = CURRENCIES.find(c => c.code === ticket.price.currency)?.symbol ?? '';
+        const price = `${symbol}${ticket.price.amount} `;
+
+        return (
+            <tr key={ticket.id}>
+                <td>{ticket.title}</td>
+                <td>{price}</td>
+            </tr>
+        );
+    });
+
+    return (
+        <div>
+            <h1>Tickets</h1>
+            <table className="table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Price</th>
+                    </tr>
+                </thead>
+                <tbody>{rows}</tbody>
+            </table>
+        </div>
+    );
 };
+
+LandingPage.getInitialProps = async (context, client, currentUser) => {
+    const { data } = await client.get('/api/tickets');
+
+    return { tickets: data };
+}
 
 export default LandingPage;

@@ -3,13 +3,15 @@ import 'bootstrap/dist/css/bootstrap.css'
 import buildClient from '../api/build-client'
 import Header from '../components/header';
 
-// Next.js calls this with the current page component and its props.
+// Next.js calls this implicitly with the current page component and its props.
 // It's the root wrapper for every page in the app.
 const AppComponent = ({ Component, pageProps, currentUser }) => {
     return (
         <div>
             <Header currentUser={currentUser} />
-            <Component {...pageProps} />
+            <div className="container">
+                <Component currentUser={currentUser} {...pageProps} />
+            </div>
         </div>
     );
 };
@@ -18,20 +20,19 @@ const AppComponent = ({ Component, pageProps, currentUser }) => {
 AppComponent.getInitialProps = async appContext => {
     const client = buildClient(appContext.ctx);
 
+    // Default to null if there's no authenticated user -- not all pages need authentication
+    let data = { currentUser: null };
     try {
-        const { data } = await client.get(`/api/users/currentuser`);
+        ({ data } = await client.get(`/api/users/currentuser`));
+    } catch (err) {}
 
-        let pageProps = {};
-        if (appContext.Component.getInitialProps) {
-            // Invoke current page's getInitialProps
-            pageProps = await appContext.Component.getInitialProps(appContext.ctx);
-        }
-
-        // ...data twice: top-level props go to AppComponent (e.g. Header), pageProps go to the page component
-        return { pageProps: { ...pageProps, ...data }, ...data };
-    } catch (err) {
-        return { pageProps: { currentUser: null }, currentUser: null };
+    let pageProps = {};
+    if (appContext.Component.getInitialProps) {
+        // Invoke current page's getInitialProps
+        pageProps = await appContext.Component.getInitialProps(appContext.ctx, client, data.currentUser);
     }
+
+    return { pageProps, ...data };
 };
 
 export default AppComponent;

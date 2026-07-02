@@ -6,6 +6,7 @@ const Header = ({ currentUser }) => {
         links.push({ key: 'signup', label: 'Sign up', href: '/auth/signup' });
         links.push({ key: 'signin', label: 'Sign in', href: '/auth/signin' });
     } else {
+        links.push({ key: 'createticket', label: 'New ticket', href: '/tickets/create' });
         links.push({ key: 'signout', label: 'Sign out', href: '/auth/signout' });
     }
 

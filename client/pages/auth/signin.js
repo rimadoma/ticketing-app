@@ -19,6 +19,8 @@ const SignInPage = () => {
         await doRequest();
     }
 
+
+    // TODO add a sign up link
     return (
         <form onSubmit={onSubmit}>
             <h1>Sign In</h1>
