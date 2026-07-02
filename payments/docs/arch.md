@@ -30,3 +30,4 @@ A given order must never be charged twice, even if the client retries the reques
 - No minimum charge amount validation. Stripe requires a minimum of $0.50 (or equivalent) — amounts below this will be rejected by Stripe at runtime.
 - Currency support is not validated. Stripe does not support all ISO 4217 currency codes; unsupported currencies will be rejected at runtime.
 - Doesn't support any currencies that don't divide into sub-units of 100, e.g. JPY
+- No Stripe receipt emails. The `receipt_email` field on `paymentIntents.create()` could be set to the buyer's email, but the payments service has no access to user data — it would need to call the auth service directly to look up the user by `userId`.

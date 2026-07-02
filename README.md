@@ -27,7 +27,7 @@ Most of these changes were made because the course is a few years old and some o
 ## Architecture
 Backend follows a clean microservice architecture where each app is completely independent. They're deployed separately with no coupling. Most services have their own MongoDB database; expiration uses Redis instead to persist pending timers. In principle services could be implemented in different technologies, but in practice all use Node.js, TypeScript, and Fastify. Data-backed services use MongoDB with Mongoose & Typegoose. Data would probably fit better in a relational DB like PostgreSQL, but following the course with MongoDB.
 
-Frontend (client) is rendered server side with Next.JS. Very Web 1.0 aesthetics. 
+Frontend (client) is rendered server side with Next.JS. Very rudimentary & janky Web 1.0 UX. 
 
 Apps are containerised with Docker and can be deployed to a Kubernetes cluster running either locally or on GKE (see below). The backend images are dev images for ease of use (they run `tsx` rather than precompiled JS) and could be optimised for prod. The client is the exception: `client/Dockerfile` runs `next dev` for local work, while `client/Dockerfile.prod` (used for GCP) does a real `next build` + `next start`.
 

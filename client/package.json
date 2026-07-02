@@ -13,9 +13,12 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@stripe/react-stripe-js": "^6.7.0",
+    "@stripe/stripe-js": "^9.9.0",
     "axios": "^1.18.0",
     "bootstrap": "^5.3.8",
     "next": "^16.2.9",
+    "prop-types": "^15.8.1",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   }

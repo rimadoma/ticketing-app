@@ -23,7 +23,8 @@ class Price {
                         currency: ret.price.currency,
                     },
                     userId: ret.userId,
-                    version: ret.version
+                    version: ret.version,
+                    reservingOrderId: ret.reservingOrderId ?? null,
                 };
             }
         }
