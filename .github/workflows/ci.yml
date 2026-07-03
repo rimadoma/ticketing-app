@@ -3,16 +3,21 @@ name: CI
 on:
   push:
     branches: [main]
-    paths-ignore:
+    paths-ignore: &paths_ignore
       - 'infra/**'
       - 'docs/**'
       - '**/*.md'
       - 'skaffold.yaml'
       - '**/.dockerignore'
       - '**/.gitignore'
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore: *paths_ignore
 
 jobs:
   test:
+    # Skip while the PR is a draft; still runs on push and on ready_for_review.
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     strategy:
       matrix:
