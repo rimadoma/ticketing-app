@@ -12,8 +12,6 @@ A microservices ticketing app. Backend services are independently deployable Nod
 auth/               # Auth service (port 3000) — /api/users/*
 client/             # Next.js frontend (port 3000) — catch-all /
 common/             # Shared library (@mahonen_consulting_zlc/common) — published to npm
-event-bus/          # Shared RabbitMQ event-bus library — consumed by all backend services
-  docs/arch.md      # Architecture decision record
 expiration/         # Expiration service — no HTTP routes
 orders/             # Orders service (port 3003) — /api/orders/*
 payments/           # Payments service (port 3001) — /api/payments
@@ -70,15 +68,19 @@ Skaffold syncs source directly into running containers without a full image rebu
 
 ## Architecture
 
-### Event Bus (`event-bus/`)
+### Event Bus (`common/src/event-bus/`)
 
 A shared Node.js/TypeScript library consumed by all backend microservices for event-driven communication. Encapsulates the RabbitMQ connection, channel management, publisher, and subscriber — services never use `amqplib` directly.
 
 **Broker:** RabbitMQ, running as a Kubernetes Deployment + ClusterIP Service in `infra/k8s/`.  
 **Client:** `amqp-connection-manager` (auto-reconnect wrapper over `amqplib`).  
-**Pattern:** topic exchange — events are routed by type (e.g. `ticket.created`). Each subscribing service binds its own durable queue named `${serviceName}.${routingKey}` (e.g. `orders.ticket.created`). Publishers only assert the exchange — queue creation is the listener's responsibility. Messages and queues are durable; consumers ack only after successful processing.
+**Pattern:** topic exchange — events are routed by type (e.g. `ticket.created`). Each subscribing service consumes from its own durable queue named `${serviceName}.${routingKey}` (e.g. `orders.ticket.created`). Messages and queues are durable; consumers ack only after successful processing.
 
-When implementing a new `Listener` subclass, you must declare `protected readonly serviceName` — this becomes the queue name prefix and must be unique per consuming service.
+**Topology bootstrap:** the full exchange/queue/binding topology is declared up front so queues exist and are bound *before* any producer publishes — a topic exchange silently drops messages that route to no currently-bound queue, so a listener that has never connected would otherwise lose events published before its first boot. `EventBus.create()` reads the `EVENT_BUS_TOPOLOGY` env var (a `;`-separated list of `service,exchange,suffix` rows, e.g. `orders,ticket,created;orders,ticket,updated`) and asserts every exchange, queue, and binding as a side effect of connecting — idempotently, so whichever service boots first materializes the topology and the rest re-assert harmlessly. The route is `${exchange}.${suffix}` and the queue is `${service}.${route}`. If the var is unset or empty, `create()` logs and continues, falling back to listeners creating their own queue on connect. A listener still asserts+binds its own queue too (belt-and-suspenders). All queues carry a shared `x-message-ttl` (`QUEUE_TTL_MS`, 7 days) — the topology bootstrap and the listener's `assertQueue` **must** pass identical arguments or RabbitMQ rejects the second declaration with `PRECONDITION_FAILED`.
+
+The topology is defined once in an `event-bus-topology` ConfigMap (in both `infra/k8s/` and `infra/k8s-gcp/`) whose single `EVENT_BUS_TOPOLOGY` key each event-bus service pulls in via `envFrom` — no volume mount, no per-service duplication. First-boot-wins works because every service gets the same complete topology.
+
+When implementing a new `Listener` subclass, you must declare `protected readonly serviceName` — this becomes the queue name prefix and must be unique per consuming service. Add a matching row to the `event-bus-topology` ConfigMap (both `infra/k8s/` and `infra/k8s-gcp/`) so its queue is pre-declared.
 
 See `event-bus/docs/arch.md` for the full architecture decision record.
 

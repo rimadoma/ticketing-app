@@ -4,6 +4,7 @@ import { z, type ZodType } from 'zod';
 import { AppError } from '../errors/custom-error.js';
 import { AppErrorIds } from '../errors/app-error-ids.js';
 import type Event from './events/event.js';
+import { QUEUE_ARGS } from './topology.js';
 
 export default abstract class Listener<T extends Event<z.ZodType>> {
     private channel: ChannelWrapper | null = null;
@@ -22,7 +23,7 @@ export default abstract class Listener<T extends Event<z.ZodType>> {
             this.channel = connection.createChannel({
                 setup: async (channel: amqp.ConfirmChannel) => {
                     await channel.assertExchange(exchangeName, 'topic', { durable: true });
-                    await channel.assertQueue(queueName, { durable: true });
+                    await channel.assertQueue(queueName, { durable: true, arguments: QUEUE_ARGS });
                     await channel.bindQueue(queueName, exchangeName, routingKey);
                     await channel.consume(
                         queueName,

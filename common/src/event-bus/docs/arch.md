@@ -49,6 +49,27 @@ Listeners validate every incoming message against the schema before passing data
 - **Durability:** queues and messages are durable — RabbitMQ persists them across broker restarts
 - **Acknowledgement:** consumers ack only after successful processing; unacked messages are requeued on crash
 
+## Topology Bootstrap
+
+**Problem.** A topic exchange has no memory: it drops any message that routes to no *currently-bound* queue. Because queue creation was originally the listener's responsibility (each listener asserted and bound its own queue on `connect()`), any event published before a consumer had ever connected was silently lost. Under Skaffold all services come up together so the window is brief, but "brief" still loses messages — and the gap is wide open the moment a *new* consumer is added to an already-running system.
+
+**Decision.** Declare the full exchange/queue/binding topology up front, so every queue exists and is bound before any producer publishes. `EventBus.create()` reads the topology from an env var and asserts every exchange, queue, and binding as a side effect of connecting. This is deliberately encapsulated in the library: services still just call `EventBus.create()` as before and have no knowledge that connecting is what materializes the topology. Assertion is idempotent, so whichever service boots first creates everything and the rest re-assert harmlessly — "first service wins" is an emergent property, not a role any service is assigned.
+
+**Config format.** The `EVENT_BUS_TOPOLOGY` env var holds a `;`-separated list of `service,exchange,suffix` rows (e.g. `orders,ticket,created;orders,ticket,updated`). Everything else is *joined*, never parsed:
+
+- route = `${exchange}.${suffix}` (e.g. `order.created`)
+- queue = `${service}.${route}` (e.g. `expiration.order.created`) — the same construction `listener.ts` already uses
+
+The queue name is never split back apart, so there is no ambiguity around dotted service names. The one invariant this bakes in — every routing key is exactly `exchange.suffix`, first segment equal to the exchange — is already load-bearing: `publisher.ts` derives the exchange as the substring of the route before the first dot, so the config cannot drift from it without the publisher also breaking.
+
+Because "first service wins" requires whoever boots first to have the *complete* topology, the full list must reach every event-bus service. It is defined once in an `event-bus-topology` ConfigMap (a single `EVENT_BUS_TOPOLOGY` key) and pulled into each deployment via `envFrom` — define-once, delivered as an ordinary env var, and none of the volume/volumeMount machinery a file-mounted ConfigMap would need. The value is duplicated across the `infra/k8s/` and `infra/k8s-gcp/` ConfigMaps (one per environment), but not across services within an environment.
+
+**Fallback.** If the env var is unset, empty, or entirely malformed, `create()` logs a warning and continues — the system falls back to the original behavior where each listener asserts and binds its own queue on connect (which it still does regardless, as belt-and-suspenders). A missing var degrades to the old cold-start gap rather than failing startup.
+
+**Message TTL.** Pre-declaring durable queues means a queue whose consumer is never deployed would accumulate messages forever. To bound this, every queue is asserted with a shared `x-message-ttl` (`QUEUE_TTL_MS`, 7 days, in `topology.ts`). Crucially, the same `QUEUE_ARGS` are passed by **both** the topology bootstrap and the listener's own `assertQueue` — RabbitMQ rejects redeclaring a durable queue with different arguments (`PRECONDITION_FAILED`), so the two declaration sites must stay identical. This is why the TTL lives in one shared constant.
+
+**Migration note.** Because existing durable queues are redeclared with the new `x-message-ttl`, any queue that already exists *without* it must be deleted before rollout or the redeclaration fails with `PRECONDITION_FAILED`. Local RabbitMQ is ephemeral (no PVC — see [Infrastructure](#infrastructure)), so a pod restart clears it. The GCP manifest mounts a PVC, so its queues survive restarts and must be deleted explicitly (management UI or `rabbitmqctl delete_queue`) on the first deploy of this change.
+
 ## Event Replay
 
 RabbitMQ is queue-based — messages are removed once consumed. The current approach uses durable queues, which cover the primary operational need: if a service pod restarts, its durable queue holds unacked messages until the consumer reconnects (`amqp-connection-manager` handles reconnection automatically). Messages are also persisted on a volume so that if RabbitMQ goes down they don't disappear from the queue.

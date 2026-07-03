@@ -28,6 +28,9 @@ spec:
                 secretKeyRef:
                   name: stripe-secret
                   key: STRIPE_KEY
+          envFrom:
+            - configMapRef:
+                name: event-bus-topology
 ---
 apiVersion: v1
 kind: Service

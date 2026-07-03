@@ -20,6 +20,9 @@ spec:
           env:
             - name: REDIS_URL
               value: "redis://expiration-redis-service:6379"
+          envFrom:
+            - configMapRef:
+                name: event-bus-topology
           resources:
             requests:
               cpu: 250m
