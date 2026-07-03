@@ -41,10 +41,21 @@ spec:
           volumeMounts:
             - name: rabbitmq-data
               mountPath: /var/lib/rabbitmq
+            - name: rabbitmq-config
+              mountPath: /etc/rabbitmq/definitions.json
+              subPath: definitions.json
+              readOnly: true
+            - name: rabbitmq-config
+              mountPath: /etc/rabbitmq/conf.d/20-definitions.conf
+              subPath: 20-definitions.conf
+              readOnly: true
       volumes:
         - name: rabbitmq-data
           persistentVolumeClaim:
             claimName: rabbitmq-pvc
+        - name: rabbitmq-config
+          configMap:
+            name: rabbitmq-config
 ---
 apiVersion: v1
 kind: Service

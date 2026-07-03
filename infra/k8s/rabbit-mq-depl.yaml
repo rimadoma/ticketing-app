@@ -18,6 +18,19 @@ spec:
           ports:
             - containerPort: 5672
             - containerPort: 15672
+          volumeMounts:
+            - name: rabbitmq-config
+              mountPath: /etc/rabbitmq/definitions.json
+              subPath: definitions.json
+              readOnly: true
+            - name: rabbitmq-config
+              mountPath: /etc/rabbitmq/conf.d/20-definitions.conf
+              subPath: 20-definitions.conf
+              readOnly: true
+      volumes:
+        - name: rabbitmq-config
+          configMap:
+            name: rabbitmq-config
 ---
 apiVersion: v1
 kind: Service

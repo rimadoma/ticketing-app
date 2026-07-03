@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rabbitmq-config
+data:
+  # Dropped into /etc/rabbitmq/conf.d/ (additive — does not shadow the image's
+  # rabbitmq.conf or enabled_plugins). Loads the topology below at broker start
+  # and allows the default `guest` user to connect from other pods (not just
+  # loopback), which the services rely on (amqp://rabbitmq-service, no creds).
+  20-definitions.conf: |
+    load_definitions = /etc/rabbitmq/definitions.json
+    loopback_users = none
+  # Full exchange/queue/binding topology, declared at broker startup so queues
+  # exist and are bound before any producer publishes. Because load_definitions
+  # suppresses default-user creation on a fresh node, the vhost, guest user, and
+  # its permissions MUST be included here too. The x-message-ttl on each queue
+  # must stay in sync with QUEUE_TTL_MS in common/src/event-bus/topology.ts.
+  definitions.json: |
+    {
+      "vhosts": [{ "name": "/" }],
+      "users": [
+        {
+          "name": "guest",
+          "password_hash": "EEtCuWwN3NB0Qcdzo2j1n1f8oyeSV15ySKzp+VM6jk2muaCt",
+          "tags": ["administrator"]
+        }
+      ],
+      "permissions": [
+        { "user": "guest", "vhost": "/", "configure": ".*", "write": ".*", "read": ".*" }
+      ],
+      "exchanges": [
+        { "name": "ticket",     "vhost": "/", "type": "topic", "durable": true },
+        { "name": "order",      "vhost": "/", "type": "topic", "durable": true },
+        { "name": "payment",    "vhost": "/", "type": "topic", "durable": true },
+        { "name": "expiration", "vhost": "/", "type": "topic", "durable": true }
+      ],
+      "queues": [
+        { "name": "orders.ticket.created",      "vhost": "/", "durable": true, "arguments": { "x-message-ttl": 604800000 } },
+        { "name": "orders.ticket.updated",      "vhost": "/", "durable": true, "arguments": { "x-message-ttl": 604800000 } },
+        { "name": "orders.payment.created",     "vhost": "/", "durable": true, "arguments": { "x-message-ttl": 604800000 } },
+        { "name": "orders.expiration.complete", "vhost": "/", "durable": true, "arguments": { "x-message-ttl": 604800000 } },
+        { "name": "tickets.order.created",      "vhost": "/", "durable": true, "arguments": { "x-message-ttl": 604800000 } },
+        { "name": "tickets.order.cancelled",    "vhost": "/", "durable": true, "arguments": { "x-message-ttl": 604800000 } },
+        { "name": "payments.order.created",     "vhost": "/", "durable": true, "arguments": { "x-message-ttl": 604800000 } },
+        { "name": "payments.order.cancelled",   "vhost": "/", "durable": true, "arguments": { "x-message-ttl": 604800000 } },
+        { "name": "expiration.order.created",   "vhost": "/", "durable": true, "arguments": { "x-message-ttl": 604800000 } }
+      ],
+      "bindings": [
+        { "source": "ticket",     "vhost": "/", "destination": "orders.ticket.created",      "destination_type": "queue", "routing_key": "ticket.created",      "arguments": {} },
+        { "source": "ticket",     "vhost": "/", "destination": "orders.ticket.updated",      "destination_type": "queue", "routing_key": "ticket.updated",      "arguments": {} },
+        { "source": "payment",    "vhost": "/", "destination": "orders.payment.created",     "destination_type": "queue", "routing_key": "payment.created",     "arguments": {} },
+        { "source": "expiration", "vhost": "/", "destination": "orders.expiration.complete", "destination_type": "queue", "routing_key": "expiration.complete", "arguments": {} },
+        { "source": "order",      "vhost": "/", "destination": "tickets.order.created",      "destination_type": "queue", "routing_key": "order.created",       "arguments": {} },
+        { "source": "order",      "vhost": "/", "destination": "tickets.order.cancelled",    "destination_type": "queue", "routing_key": "order.cancelled",     "arguments": {} },
+        { "source": "order",      "vhost": "/", "destination": "payments.order.created",     "destination_type": "queue", "routing_key": "order.created",       "arguments": {} },
+        { "source": "order",      "vhost": "/", "destination": "payments.order.cancelled",   "destination_type": "queue", "routing_key": "order.cancelled",     "arguments": {} },
+        { "source": "order",      "vhost": "/", "destination": "expiration.order.created",   "destination_type": "queue", "routing_key": "order.created",       "arguments": {} }
+      ]
+    }

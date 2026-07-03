@@ -25,9 +25,6 @@ spec:
                   key: JWT_KEY
             - name: MONGO_URI
               value: "mongodb://orders-mongo-service:27017/orders"
-          envFrom:
-            - configMapRef:
-                name: event-bus-topology
           resources:
             requests:
               cpu: 250m

@@ -4,7 +4,16 @@ import { z, type ZodType } from 'zod';
 import { AppError } from '../errors/custom-error.js';
 import { AppErrorIds } from '../errors/app-error-ids.js';
 import type Event from './events/event.js';
-import { QUEUE_ARGS } from './topology.js';
+
+/**
+ * Queues are declared up front by the broker's `definitions.json` (see the
+ * `rabbitmq-config` ConfigMap in `infra/k8s*`), which sets this same
+ * `x-message-ttl`. A listener re-declares its own queue on connect as a
+ * fallback, so its `assertQueue` args **must** match the broker's or RabbitMQ
+ * rejects the redeclaration with `PRECONDITION_FAILED`. Keep this value in sync
+ * with the `x-message-ttl` in that ConfigMap.
+ */
+const QUEUE_ARGS: Record<string, unknown> = { 'x-message-ttl': 7 * 24 * 60 * 60 * 1000 }; // 7 days
 
 export default abstract class Listener<T extends Event<z.ZodType>> {
     private channel: ChannelWrapper | null = null;

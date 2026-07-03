@@ -12,10 +12,13 @@ A microservices ticketing app. Backend services are independently deployable Nod
 auth/               # Auth service (port 3000) — /api/users/*
 client/             # Next.js frontend (port 3000) — catch-all /
 common/             # Shared library (@mahonen_consulting_zlc/common) — published to npm
+docs/               # Cross-cutting docs (events.md event-flow table, backend-testing-arch.md)
 expiration/         # Expiration service — no HTTP routes
+hedgehog-consultancy/  # Easter-egg "Hedgehog as a Service" app — GCP only (see Architecture)
 orders/             # Orders service (port 3003) — /api/orders/*
 payments/           # Payments service (port 3001) — /api/payments
   docs/arch.md      # Stripe integration and idempotency decisions
+scripts/            # Repo-wide helper scripts: build-all.sh, test-all.sh, prepare-for-publish.sh
 tickets/            # Tickets service (port 3002) — /api/tickets/*
 infra/
   k8s/              # Local Kubernetes manifests
@@ -76,13 +79,13 @@ A shared Node.js/TypeScript library consumed by all backend microservices for ev
 **Client:** `amqp-connection-manager` (auto-reconnect wrapper over `amqplib`).  
 **Pattern:** topic exchange — events are routed by type (e.g. `ticket.created`). Each subscribing service consumes from its own durable queue named `${serviceName}.${routingKey}` (e.g. `orders.ticket.created`). Messages and queues are durable; consumers ack only after successful processing.
 
-**Topology bootstrap:** the full exchange/queue/binding topology is declared up front so queues exist and are bound *before* any producer publishes — a topic exchange silently drops messages that route to no currently-bound queue, so a listener that has never connected would otherwise lose events published before its first boot. `EventBus.create()` reads the `EVENT_BUS_TOPOLOGY` env var (a `;`-separated list of `service,exchange,suffix` rows, e.g. `orders,ticket,created;orders,ticket,updated`) and asserts every exchange, queue, and binding as a side effect of connecting — idempotently, so whichever service boots first materializes the topology and the rest re-assert harmlessly. The route is `${exchange}.${suffix}` and the queue is `${service}.${route}`. If the var is unset or empty, `create()` logs and continues, falling back to listeners creating their own queue on connect. A listener still asserts+binds its own queue too (belt-and-suspenders). All queues carry a shared `x-message-ttl` (`QUEUE_TTL_MS`, 7 days) — the topology bootstrap and the listener's `assertQueue` **must** pass identical arguments or RabbitMQ rejects the second declaration with `PRECONDITION_FAILED`.
+**Topology bootstrap:** the full exchange/queue/binding topology is declared up front so queues exist and are bound *before* any producer publishes — a topic exchange silently drops messages that route to no currently-bound queue, so a listener that has never connected would otherwise lose events published before its first boot. The topology is declared at the **broker**: a `definitions.json` (in the `rabbitmq-config` ConfigMap, `infra/k8s/rabbitmq-config.yaml`) is loaded at RabbitMQ startup via `load_definitions`, so every exchange, queue, and binding exists the moment the broker is ready — before any service connects, with no app coupling. Listeners still assert+bind their own queue on connect (belt-and-suspenders), so a listener stays self-sufficient. All queues carry a shared `x-message-ttl` (7 days): the value is declared in `definitions.json` **and** passed by the listener's `assertQueue` as `QUEUE_ARGS` (a const in `common/src/event-bus/listener.ts`) — the two **must** match or RabbitMQ rejects the redeclaration with `PRECONDITION_FAILED`, so keep the JSON value and the TS constant in sync.
 
-The topology is defined once in an `event-bus-topology` ConfigMap (in both `infra/k8s/` and `infra/k8s-gcp/`) whose single `EVENT_BUS_TOPOLOGY` key each event-bus service pulls in via `envFrom` — no volume mount, no per-service duplication. First-boot-wins works because every service gets the same complete topology.
+Because `load_definitions` suppresses default-user creation on a fresh node, `definitions.json` also declares the vhost `/`, the `guest` user (with `password_hash`), and its permissions; `loopback_users = none` (in the same ConfigMap's `20-definitions.conf`) lets services connect as `guest` from other pods (`amqp://rabbitmq-service`, no creds). The config is mounted into the RabbitMQ container via `subPath` so it does not shadow the image's `enabled_plugins`.
 
-When implementing a new `Listener` subclass, you must declare `protected readonly serviceName` — this becomes the queue name prefix and must be unique per consuming service. Add a matching row to the `event-bus-topology` ConfigMap (both `infra/k8s/` and `infra/k8s-gcp/`) so its queue is pre-declared.
+When implementing a new `Listener` subclass, you must declare `protected readonly serviceName` — this becomes the queue name prefix and must be unique per consuming service. Add its queue and a binding (routing key `${exchange}.${suffix}`) to `definitions.json` in the `rabbitmq-config` ConfigMap (both `infra/k8s/` and `infra/k8s-gcp/`) so the queue is pre-declared.
 
-See `event-bus/docs/arch.md` for the full architecture decision record.
+See `common/src/event-bus/docs/arch.md` for the full architecture decision record.
 
 ### Shared Library (`common/`)
 
@@ -141,7 +144,7 @@ The NGINX Ingress controller routes by path to each service's ClusterIP:
 
 Rules are evaluated most-specific first. `/` is the catch-all for the Next.js frontend — unknown routes return a 404 from Next.js, not the ingress.
 
-Each new service needs a Deployment + ClusterIP Service manifest in `infra/k8s/` and a corresponding path rule in `infra/k8s/ingress-srv.yaml`. The GCP equivalents live in `infra/k8s-gcp/` with Artifact Registry image paths.
+Each new service that serves HTTP needs a Deployment + ClusterIP Service manifest in `infra/k8s/` and a corresponding path rule in `infra/k8s/ingress-srv.yaml`. A service with no HTTP routes (e.g. `expiration`) needs only a Deployment — no Service, no ingress rule. The GCP equivalents live in `infra/k8s-gcp/` with Artifact Registry image paths.
 
 ### TypeScript Configuration
 
@@ -149,3 +152,11 @@ Each new service needs a Deployment + ClusterIP Service manifest in `infra/k8s/`
 - `"strict": true` with `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes` enabled
 - `"verbatimModuleSyntax": true` — use `import type` for type-only imports
 - Do not use `any`
+
+### Hedgehog Consultancy (`hedgehog-consultancy/`) — easter egg
+
+A standalone Fastify (TypeScript) app, separate from the ticketing services: **Mähönen Consulting ZLC — "Hedgehog as a Service (HaaS)"**. It serves a tongue-in-cheek "consultation" — with a prickly, snuffle-billed legal disclaimer — at `/api/hedgehog/consult`.
+
+It is **GCP-only**: deployed by `infra/k8s-gcp/hedgehog.yaml` (Deployment + ClusterIP Service on port 3001), built by the `gcp` Skaffold profile, and routed at `/api/hedgehog/consult` in the GCP ingress. It has no `infra/k8s/` manifest and does not run under `skaffold dev`.
+
+It's a silly little easter egg in honour of the plush hedgehog consultant **Mähönen** — also the namesake of the `@mahonen_consulting_zlc` npm scope on the shared library.

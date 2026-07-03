@@ -16,7 +16,7 @@
     "@types/node": "^22.0.0"
   },
   "dependencies": {
-    "@mahonen_consulting_zlc/common": "^9.0.0",
+    "@mahonen_consulting_zlc/common": "^9.1.0",
     "bullmq": "^5.0.0",
     "tsx": "^4.0.0",
     "typescript": "^6.0.3"

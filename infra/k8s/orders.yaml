@@ -23,9 +23,6 @@ spec:
                   key: JWT_KEY
             - name: MONGO_URI
               value: "mongodb://orders-mongo-service:27017/orders"
-          envFrom:
-            - configMapRef:
-                name: event-bus-topology
 ---
 apiVersion: v1
 kind: Service
