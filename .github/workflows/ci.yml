@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [auth, orders, tickets]
+        service: [auth, orders, tickets, payments, common]
 
     steps:
       - uses: actions/checkout@v5

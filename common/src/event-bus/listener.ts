@@ -38,7 +38,16 @@ export default abstract class Listener<T extends Event<z.ZodType>> {
                         queueName,
                         (message) => {
                             if (!message) return;
-                            const parsed = this.parseMessage(message);
+                            let parsed: T['data'];
+                            try {
+                                parsed = this.parseMessage(message);
+                            } catch (err) {
+                                // A malformed or schema-invalid message can never succeed, so
+                                // ack it (don't requeue) to stop it bouncing back and forth forever.
+                                console.error(`Discarding unparseable message on queue ${queueName}`, err);
+                                this.channel!.ack(message);
+                                return;
+                            }
                             this.onMessage(parsed, message)
                                 .then(() => this.channel!.ack(message))
                                 .catch(() => this.channel!.nack(message, false, true));
