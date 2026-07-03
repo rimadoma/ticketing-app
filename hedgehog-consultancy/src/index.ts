@@ -94,7 +94,7 @@ A long, meaningful stare
 A stiff upper lip, offered free of charge
 Or a small, imaginary hug
 
-At the Company’s sole discretion, restitution may also be rendered as:
+At the Company's sole discretion, restitution may also be rendered as:
 A brief period of silent judgment
 A comforting, but non-committal presence
 
@@ -120,7 +120,7 @@ The Company shall not be held responsible for delays or failures resulting from:
 Naps
 Snack breaks
 Being slightly startled
-Rotatial confusion
+Rotational confusion
 Seasonal snuggliness
 Inclement weather (a spot of drizzle counts)
 Industrial action by the hedgehog's union
@@ -145,7 +145,7 @@ function invoice(count: number): string {
     return `---\nConsultation fee: £${price} for ${count} snuffles`;
 }
 
-function isSeasonalCampaignActive() : boolean {
+function isSeasonalCampaignActive(): boolean {
     // It's always a season, innit?
     return true;
 }
