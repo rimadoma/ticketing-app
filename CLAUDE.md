@@ -22,7 +22,7 @@ scripts/            # Repo-wide helper scripts: build-all.sh, test-all.sh, prepa
 tickets/            # Tickets service (port 3002) — /api/tickets/*
 infra/
   k8s/              # Local Kubernetes manifests
-  k8s-gcp/          # GCP Kubernetes manifests
+  k8s-gcp/          # GCP Kubernetes manifests — only hedgehog.yaml + ingress-srv.yaml are actually deployed (see Hedgehog Consultancy below); the rest are kept for reference
 skaffold.yaml       # Local dev orchestration
 ```
 
@@ -144,7 +144,7 @@ The NGINX Ingress controller routes by path to each service's ClusterIP:
 
 Rules are evaluated most-specific first. `/` is the catch-all for the Next.js frontend — unknown routes return a 404 from Next.js, not the ingress.
 
-Each new service that serves HTTP needs a Deployment + ClusterIP Service manifest in `infra/k8s/` and a corresponding path rule in `infra/k8s/ingress-srv.yaml`. A service with no HTTP routes (e.g. `expiration`) needs only a Deployment — no Service, no ingress rule. The GCP equivalents live in `infra/k8s-gcp/` with Artifact Registry image paths.
+Each new service that serves HTTP needs a Deployment + ClusterIP Service manifest in `infra/k8s/` and a corresponding path rule in `infra/k8s/ingress-srv.yaml`. A service with no HTTP routes (e.g. `expiration`) needs only a Deployment — no Service, no ingress rule. GCP equivalents with Artifact Registry image paths exist for every service in `infra/k8s-gcp/`, but only `hedgehog-consultancy` is actually deployed there (see below) — the free-tier quota can't host the full stack.
 
 ### TypeScript Configuration
 
@@ -158,5 +158,7 @@ Each new service that serves HTTP needs a Deployment + ClusterIP Service manifes
 A standalone Fastify (TypeScript) app, separate from the ticketing services: **Mähönen Consulting ZLC — "Hedgehog as a Service (HaaS)"**. It serves a tongue-in-cheek "consultation" — with a prickly, snuffle-billed legal disclaimer — at `/api/hedgehog/consult`.
 
 It is **GCP-only**: deployed by `infra/k8s-gcp/hedgehog.yaml` (Deployment + ClusterIP Service on port 3001), built by the `gcp` Skaffold profile, and routed at `/api/hedgehog/consult` in the GCP ingress. It has no `infra/k8s/` manifest and does not run under `skaffold dev`.
+
+It is also the **only** service the `gcp` Skaffold profile builds and deploys. The other services' `infra/k8s-gcp/` manifests still exist but aren't referenced by `skaffold.yaml` — the GCP free-tier quota wasn't enough to host the full stack (auth, client, tickets, orders, payments, their Mongo instances, RabbitMQ), so everything except this easter egg was dropped from GCP to stay within quota. The full stack still runs locally via `skaffold dev`.
 
 It's a silly little easter egg in honour of the plush hedgehog consultant **Mähönen** — also the namesake of the `@mahonen_consulting_zlc` npm scope on the shared library.

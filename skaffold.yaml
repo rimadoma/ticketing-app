@@ -97,31 +97,12 @@ profiles:
   - name: gcp
     manifests:
       rawYaml:
-        - ./infra/k8s-gcp/*
+        - ./infra/k8s-gcp/hedgehog.yaml
+        - ./infra/k8s-gcp/ingress-srv.yaml
     build:
       local:
         push: true
       artifacts:
-        - image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/auth
-          context: .
-          docker:
-            dockerfile: auth/Dockerfile
-        - image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/client
-          context: .
-          docker:
-            dockerfile: client/Dockerfile.prod
-        - image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/tickets
-          context: .
-          docker:
-            dockerfile: tickets/Dockerfile
-        - image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/orders
-          context: .
-          docker:
-            dockerfile: orders/Dockerfile
-        - image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/expiration
-          context: .
-          docker:
-            dockerfile: expiration/Dockerfile
         - image: europe-north1-docker.pkg.dev/project-809e066d-e5ea-4d42-aa1/ticketing/hedgehog-consultancy
           context: hedgehog-consultancy
           docker:

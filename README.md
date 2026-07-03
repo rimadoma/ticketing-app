@@ -22,7 +22,7 @@ Most of these changes were made because the course is a few years old and some o
 * Orders - Manages the purchase lifecycle for a ticket. Exposes create, get, and cancel routes. Publishes `order.created` and `order.cancelled`; listens for `ticket.created` and `ticket.updated` to maintain a local copy of ticket details (orders store a denormalised snapshot of the ticket), `payment.created` to mark an order complete once it's paid, and `expiration.complete` to cancel unpaid orders when they time out.
 * Expiration - Tracks order expiration. Listens for `order.created`, starts a timer based on the order's `expiresAt`, and always publishes `expiration.complete` when the timer fires. The orders service decides whether to act on it. No HTTP routes. Uses Redis to persist pending timers across restarts.
 * Payments - Processes card payments via Stripe Payment Intents. Listens for `order.created` and `order.cancelled`, exposes `POST /api/payments`, and publishes `payment.created` on success.
-* Hedgehog Consultancy - A GCP-only easter egg exposing `GET /api/hedgehog/consult`. No DB, no events, no point — it just dispenses (legally non-binding) hedgehog wisdom. Only built and routed in the GCP profile; the local cluster leaves it out.
+* Hedgehog Consultancy - A GCP-only easter egg exposing `GET /api/hedgehog/consult`. No DB, no events, no point — it just dispenses (legally non-binding) hedgehog wisdom. Only built and routed in the GCP profile; the local cluster leaves it out. It's also the *only* thing deployed to GCP now — see the note under Option 2 below.
 
 ## Architecture
 Backend follows a clean microservice architecture where each app is completely independent. They're deployed separately with no coupling. Most services have their own MongoDB database; expiration uses Redis instead to persist pending timers. In principle services could be implemented in different technologies, but in practice all use Node.js, TypeScript, and Fastify. Data-backed services use MongoDB with Mongoose & Typegoose. Data would probably fit better in a relational DB like PostgreSQL, but following the course with MongoDB.
@@ -128,6 +128,8 @@ The RabbitMQ management UI is available at `http://localhost:15672` (default cre
 #### Option 2: GCP cluster
 
 > **Note:** The cluster and project details below are from a free GCP trial and may no longer be active.
+
+> **Note:** GCP deployment now only covers `hedgehog-consultancy`. The free-tier quota wasn't enough to host the full app (auth, client, tickets, orders, payments, their Mongo instances, and RabbitMQ), so the rest was dropped from the `gcp` Skaffold profile to stay within quota. The full stack still runs locally via `skaffold dev`.
 
 **One-time machine setup:**
 1. Initialise gcloud and set your default project, region, and zone:
