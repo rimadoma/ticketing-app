@@ -2,11 +2,13 @@ import Link from 'next/link'
 
 const Header = ({ currentUser }) => {
     const links = [];
+    links.push({ key: 'index', label: 'All tickets', href: '/'});
     if (!currentUser) {
         links.push({ key: 'signup', label: 'Sign up', href: '/auth/signup' });
         links.push({ key: 'signin', label: 'Sign in', href: '/auth/signin' });
     } else {
-        links.push({ key: 'createticket', label: 'New ticket', href: '/tickets/create' });
+        links.push({ key: 'createticket', label: 'Sell a ticket', href: '/tickets/create' });
+        links.push({ key: 'orders', label: 'My orders', href: '/orders' });
         links.push({ key: 'signout', label: 'Sign out', href: '/auth/signout' });
     }
 

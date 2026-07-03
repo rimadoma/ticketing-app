@@ -2,6 +2,7 @@ import { useState } from 'react';
 import useRequest from '../../hooks/use-request';
 import ErrorAlert from '../../components/error-alert';
 import Router from 'next/router';
+import Link from 'next/link';
 
 const SignUpPage = () => {
     const [email, setEmail] = useState('');
@@ -32,6 +33,7 @@ const SignUpPage = () => {
             </div>
             <button className="btn btn-primary">Sign Up</button>
             <ErrorAlert errors={errors} />
+            <p className="mt-2">Already have an account? <Link href="/auth/signin">Sign in here!</Link></p>
         </form>
     );
 };

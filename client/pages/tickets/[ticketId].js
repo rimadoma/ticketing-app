@@ -19,7 +19,7 @@ const TicketShow = ({ ticket, currentUser }) => {
         <div>
             <h1>{ticket.title}</h1>
             <h4>Price: {price}</h4>
-            <button onClick={doRequest} className="btn btn-primary" disabled={!currentUser || !!ticket.reservingOrderId}>Purchase</button>
+            <button onClick={doRequest} className="btn btn-primary" disabled={!currentUser || !!ticket.reservingOrderId}>Order now</button>
             {!currentUser && <p className="mt-2"><Link href="/auth/signin">Sign in to buy now!</Link></p>}
             <ErrorAlert errors={errors} />
         </div>

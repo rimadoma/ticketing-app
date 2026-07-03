@@ -19,3 +19,11 @@ export const ticketParamsSchema = {
 };
 
 export type TicketParams = z.infer<typeof ticketParamsSchema.params>;
+
+export const getAllTicketsQuerySchema = {
+    querystring: z.object({
+        showReserved: z.stringbool().default(true),
+    }),
+};
+
+export type GetAllTicketsQuery = z.infer<typeof getAllTicketsQuerySchema.querystring>;

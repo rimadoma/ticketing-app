@@ -71,4 +71,16 @@ const CreateTicket = () => {
     );
 };
 
+CreateTicket.getInitialProps = async (context, client, currentUser) => {
+    if (!currentUser) {
+        if (typeof window === 'undefined') {
+            context.res.writeHead(302, { Location: '/auth/signin' });
+            context.res.end();
+        } else {
+            Router.push('/auth/signin');
+        }
+    }
+    return {};
+};
+
 export default CreateTicket;

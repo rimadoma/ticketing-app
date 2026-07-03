@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { CURRENCIES } from '../constants';
 
 const LandingPage = ({ currentUser, tickets }) => {
+    if (!tickets.length) return <div><h1>Tickets</h1><p>There are no tickets</p></div>;
+
     const rows = tickets.map(ticket => {
         const symbol = CURRENCIES.find(c => c.code === ticket.price.currency)?.symbol ?? '';
         const price = `${symbol}${ticket.price.amount} `;
@@ -16,7 +18,6 @@ const LandingPage = ({ currentUser, tickets }) => {
         );
     });
 
-    // TODO show whether tickets are free, reserved, or sold
     return (
         <div>
             <h1>Tickets</h1>
@@ -35,7 +36,7 @@ const LandingPage = ({ currentUser, tickets }) => {
 };
 
 LandingPage.getInitialProps = async (context, client, currentUser) => {
-    const { data } = await client.get('/api/tickets');
+    const { data } = await client.get('/api/tickets?showReserved=false');
 
     return { tickets: data };
 }

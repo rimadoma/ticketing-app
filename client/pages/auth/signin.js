@@ -2,6 +2,7 @@ import { useState } from 'react';
 import useRequest from '../../hooks/use-request';
 import ErrorAlert from '../../components/error-alert';
 import Router from 'next/router';
+import Link from 'next/link';
 
 const SignInPage = () => {
     const [email, setEmail] = useState('');
@@ -20,7 +21,6 @@ const SignInPage = () => {
     }
 
 
-    // TODO add a sign up link
     return (
         <form onSubmit={onSubmit}>
             <h1>Sign In</h1>
@@ -34,6 +34,7 @@ const SignInPage = () => {
             </div>
             <button className="btn btn-primary">Sign In</button>
             <ErrorAlert errors={errors} />
+            <p className="mt-2">Don't have an account yet? <Link href="/auth/signup">Sign up here!</Link></p>
         </form>
     );
 };
